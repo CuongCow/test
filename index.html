@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <!-- Thẻ tiêu đề và mô tả -->
+    <title>Đam Mê Kỹ Năng</title>
+    <meta name="description" content="Đam Mê Kỹ Năng - Tool giải mật thư, Bot học mật thư và tài liệu.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Thẻ Open Graph để hiển thị logo khi chia sẻ -->
+    <meta property="og:title" content="Đam Mê Kỹ Năng">
+    <meta property="og:description" content="Tool giải mật thư, Bot học mật thư và tài liệu.">
+    <meta property="og:image" content="https://yourwebsite.com/images/logo.png">
+    <meta property="og:url" content="https://dammekynang.id.vn">
+    <meta property="og:type" content="website">
+
+    <!-- Thẻ Twitter card (nếu chia sẻ trên Twitter) -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Đam Mê Kỹ Năng">
+    <meta name="twitter:description" content="Tool giải mật thư, Bot học mật thư và tài liệu.">
+    <meta name="twitter:image" content="https://yourwebsite.com/images/logo.png">
+
+    <link rel="icon" href="/logo/logoweb-dammekynang.png" type="image/png">
+
+    <style>
+        /* Reset and Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f9fafb;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        #background-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            object-fit: cover;
+            z-index: -1;
+        }
+
+        /* Header Styles */
+        header {
+            width: 100%;
+            height: 70px;
+            background-color: rgba(42, 157, 144, 0.315);
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+            color: white;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.671);
+        }
+        header .title-container {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Menu Icon (Aligned with Title) */
+        .menu-icon {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 30px;
+            height: 20px;
+            cursor: pointer;
+            margin-right: 15px; /* Space between menu and title */
+            transition: transform 0.3s ease;
+        }
+        .menu-icon span {
+            display: block;
+            width: 100%;
+            height: 4px;
+            background-color: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        .menu-icon.active span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+        .menu-icon.active span:nth-child(2) {
+            opacity: 0;
+        }
+        .menu-icon.active span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .logo img {
+            height: 60px;
+            padding: 2px 30px;
+            margin-right: 0;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 230px;
+            background-color: rgba(255, 255, 255, 0.658);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 70px;
+            left: -230px;
+            height: calc(100vh - 70px);
+            overflow-y: auto;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: left 0.3s ease-in-out;
+            padding: 20px 0;
+        }
+        .sidebar.active {
+            left: 0;
+        }
+        .sidebar a, .dropdown-btn {
+            text-decoration: none;
+            color: #000000;
+            font-size: 1rem;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .sidebar a:hover, .dropdown-btn:hover {
+            background-color: #ffffffc9;
+            color: #2a9d8f;
+            border-left: 4px solid #2a9d8f;
+        }
+
+        /* Smooth Dropdown Content */
+        .dropdown-content {
+            display: flex;
+            flex-direction: column;
+            max-height: 0;
+            overflow: hidden;
+            padding-left: 20px;
+            transition: max-height 0.4s ease, opacity 0.4s ease;
+            opacity: 0;
+        }
+        .dropdown-content a {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            color: #000000;
+        }
+        .dropdown-content a:hover {
+            background-color: #eef2f7ce;
+            color: #2a9d8f;
+            border-left: 3px solid #2a9d8f;
+        }
+        .dropdown.active .dropdown-content {
+            max-height: 500px;
+            opacity: 1;
+        }
+/* Ban đầu submenu bị ẩn */
+.submenu {
+    display: none;
+    flex-direction: column;
+    padding-left: 20px;
+    background-color: #f9f9f98f;
+    border-left: 2px solid #2a9d8f;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Kiểu dáng các mục trong submenu */
+.submenu a {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Hiệu ứng hover cho submenu */
+.submenu a:hover {
+    background-color: #eef2f7;
+    color: #2a9d8f;
+    border-left: 3px solid #2a9d8f;
+}
+
+/* Khi submenu được kích hoạt (thêm class 'active') */
+.dropdown-sub.active .submenu {
+    display: flex;
+}
+
+
+/* Hiệu ứng mục bên trong submenu */
+.submenu a {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.submenu a:hover {
+    background-color: #eef2f7;
+    color: #2a9d8f;
+    border-left: 3px solid #2a9d8f;
+}
+        /* Main Body Styles */
+        .main-body {
+            margin-left: 260px;
+            padding: 100px 30px 30px 30px;
+            flex-grow: 10;
+            max-width: 1000px;
+        }
+        .main-body .content-placeholder {
+            background-color: rgba(21, 75, 68, 0.418);
+            padding: 30px;
+            box-shadow: 0 2px 10pxr rgb(22, 230, 202);
+            border-radius: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            color: #555;
+        }
+        .main-body .content-placeholder h1 {
+            background-color: rgba(255, 255, 255, 0);
+            text-align: center;
+            font-size: 1.2rem;
+            color: #ffffff;
+        }
+        .main-body .content-placeholder h2 {
+            background-color: rgba(255, 255, 255, 0);
+            text-align: center;
+            font-size: 1.1rem;
+            color: #ffffff;
+        }
+        .main-body .content-placeholder h3 {
+            background-color: rgba(255, 255, 255, 0);
+            text-align: center;
+            font-size: 1.1rem;
+            margin-top: 3%;
+            color: #00ffe1;
+        }
+        .main-body .content-placeholder h4 {
+            background-color: rgba(255, 255, 255, 0);
+            text-align: center;
+            font-size: 1.1rem;
+            margin-top: 1%;
+            color: #00ffe1;
+        }
+
+
+        /* Footer Styles */
+        footer {
+    background-color: #ffffff00;
+    color: rgb(255, 255, 255);
+    text-align: center;
+    padding: 15px 0px;
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50%;
+    max-width: 1200px;
+    font-size: 1rem;
+    z-index: 1;
+}
+
+
+        @media (max-width: 768px) {
+    .sidebar {
+        width: 200px; /* Adjust sidebar width for smaller screens */
+        background-color: rgb(255, 255, 255);
+        z-index: 2;
+    }
+
+    .main-body {
+        margin-left: 0; /* Remove large margin for smaller screens */
+    }
+    #background-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            object-fit: cover;
+            z-index: -1;
+        }
+            /* Footer Styles */
+            footer {
+    background-color: #ffffff00;
+    color: rgb(255, 255, 255);
+    text-align: center;
+    padding: 15px 0px;
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50%;
+    max-width: 1200px;
+    font-size: 1rem;
+    z-index: 1;
+}
+
+    .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .logo img {
+            height: 60px;
+            padding: 2px 5px;
+            margin-right: 100;
+        }
+}
+
+@media (min-width: 769px) {
+    .sidebar {
+        width: 230px; /* Default sidebar width for larger screens */
+    }
+
+    .main-body {
+        margin-left: 260px; /* Keep the sidebar space for desktops */
+    } 
+}
+@media (max-width: 768px) {
+    .sidebar {
+        left: -200px; /* Hide the sidebar off-screen for mobile */
+    }
+    .sidebar.active {
+        left: 0; /* Slide in when active */
+    }
+}
+@media (max-width: 768px) {
+    .menu-icon {
+        width: 30px; /* Slightly larger for touch accessibility */
+        height: 20px;
+    }
+}
+
+
+
+    </style>
+</head>
+<body>
+    <!-- Thay thẻ video bằng thẻ img -->
+    <img id="background-image" src="" alt="Background Image">
+
+    <!-- Header Section -->
+    <header>
+        <div class="title-container">
+            <div class="menu-icon" id="menuIcon" onclick="toggleSidebar()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="logo">
+                Đam mê Kỹ năng
+                <img src="logo/logoweb-dammekynang.png" alt="Đam mê Kỹ năng">
+            </div>
+        </div>
+        
+    </header>
+
+    <!-- Sidebar Section -->
+    <div class="sidebar" id="sidebar">
+        <a href="index.html"><span class="icon">🏠</span>Trang chủ</a>
+        <div class="dropdown">
+            <div class="dropdown-btn">
+                <span class="icon">📨</span>Tool Mật Thư<span>▼</span>
+            </div>
+            <div class="dropdown-content">
+                <div class="dropdown-sub">
+                    <a href="#" class="has-submenu">Thay thế</a>
+                    <div class="submenu">
+                        <a href="toolmatthu/thaythe/chubangchuen.html">Chữ = Chữ EN</a>
+                        <a href="toolmatthu/thaythe/sobangchuen.html">Số = Chữ EN</a>
+                        <a href="toolmatthu/thaythe/chubangchuvn.html">Chữ = Chữ VN</a>
+                        <a href="toolmatthu/thaythe/sobangchuvn.html">Số = Chữ VN</a>
+                        <a href="toolmatthu/thaythe/khanhhoa.html">Khánh Hòa</a>
+                    </div>
+                </div>
+                <div class="dropdown-sub">
+                    <a href="#" class="has-submenu">Dời chỗ</a>
+                    <div class="submenu">
+                        <a href="toolmatthu/doicho/camranh.html">CAM RANH</a>
+                        <a href="toolmatthu/doicho/docnguoc.html">Đọc Ngược</a>
+                    </div>
+                </div>
+                <a href="#">Ẩn dấu</a>
+                <a href="#">Nâng cao</a>
+            </div>
+        </div>
+        
+        <div class="dropdown">
+            <div class="dropdown-btn">
+                <span class="icon">🐺</span>Ma Sói<span>▼</span>
+            </div>
+            <div class="dropdown-content">
+                <a href="masoi/quantro.html">🤵 Quản Trò</a>
+                <a href="masoi/huongdan.html">📜 Hướng dẫn</a>
+            </div>
+        </div>
+        <div class="dropdown">
+            <div class="dropdown-btn">
+                <span class="icon">📖</span>Tài liệu<span>▼</span>
+            </div>
+            <div class="dropdown-content">
+                <a href="tailieu/banxoaymatthu.html">Bản xoay MT</a>
+                <a href="tailieu/matthu.html">Mật thư</a>
+                <a href="tailieu/muavadanvu.html">Múa, dân vũ</a>
+                <a href="tailieu/nutday.html">Nút dây</a>
+                <a href="tailieu/sinhhoatvongtron.html">SH vòng tròn</a>
+                <a href="tailieu/thucongtrai.html">TC trại</a>
+                <a href="tailieu/trochoilon.html">Trò chơi lớn</a>
+                <a href="tailieu/trochoinho.html">Trò chơi nhỏ</a>
+            </div>
+        </div>
+        <a href="lienhe.html"><span class="icon">📮</span> Liên hệ tôi</a>
+        <a href="dieukhoan.html"><span class="icon">📄</span> Điều khoản</a>
+    </div>
+
+    <!-- Main Body Section -->
+    <div class="main-body">
+        <div class="content-placeholder">
+            <h1>Chào các bạn đến với trang Kỹ năng! </h1>
+            <h2>Khám phá các kỹ năng cần thiết để chuẩn bị cho đợt trại của bạn.</h2>
+            <h3>Lưu ý: Các Tool giúp người ra mật thư thử nghiệm lại mật thư và tạo đề mật thư nhanh chóng.</h3>
+            <h4> Các bạn tránh lạm dụng tool này để giải mật thư, nhằm tránh bào mòn thế hệ tương lai </h4>
+        </div>
+    </div>
+
+    <!-- Footer Section -->
+    <footer>
+        &copy; 2024 Đam Mê Kỹ Năng
+    </footer>
+    <script>
+        // Hàm kiểm tra thời gian thực
+        function setBackgroundImage() {
+            const hour = new Date().getHours();
+            const backgroundImage = document.getElementById('background-image');
+
+            if (hour >= 6 && hour < 18) {
+                // Ban ngày (từ 6h sáng đến 18h tối)
+                backgroundImage.src = "images/image1.jpg";
+            } else {
+                // Ban đêm (từ 18h tối đến 6h sáng)
+                backgroundImage.src = "images/image2.jpg";
+            }
+        }
+
+        // Gọi hàm khi trang tải
+        setBackgroundImage();
+    </script>
+
+    <script>
+        // Toggle Sidebar and Menu Icon Animation
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const menuIcon = document.getElementById('menuIcon');
+            sidebar.classList.toggle('active');
+            menuIcon.classList.toggle('active');
+        }
+
+        // Dropdown functionality
+        const dropdownButtons = document.querySelectorAll('.dropdown-btn');
+        dropdownButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const parent = btn.parentElement;
+                parent.classList.toggle('active');
+            });
+        });
+        document.addEventListener('click', (event) => {
+    const sidebar = document.getElementById('sidebar');
+    const menuIcon = document.getElementById('menuIcon');
+
+    // Check if the click is outside the sidebar and the menu button
+    if (!sidebar.contains(event.target) && !menuIcon.contains(event.target)) {
+        sidebar.classList.remove('active');
+        menuIcon.classList.remove('active');
+    }
+    // Lấy tất cả các phần tử có class 'has-submenu'
+const submenuTriggers = document.querySelectorAll('.has-submenu');
+
+submenuTriggers.forEach(trigger => {
+    trigger.addEventListener('click', function (e) {
+        e.preventDefault(); // Ngăn chặn hành vi mặc định của thẻ <a>
+
+        // Lấy phần tử cha (dropdown-sub) và toggle class 'active'
+        const parent = this.parentElement;
+        parent.classList.toggle('active');
+
+        // Đóng các submenu khác nếu cần
+        submenuTriggers.forEach(item => {
+            if (item !== this) {
+                item.parentElement.classList.remove('active');
+            }
+        });
+    });
+});
+
+});
+
+    </script>
+</body>
+</html>

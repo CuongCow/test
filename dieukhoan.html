@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Điều Khoản Sử Dụng</title>
+    <link rel="icon" href="/logo/logoweb-dammekynang.png" type="image/png">
+    <style>
+        /* Reset and Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #ffffff;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        header {
+            width: 100%;
+            height: 70px;
+            background-color: rgb(42, 157, 143);
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+            color: white;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.425);
+        }
+        header .title-container {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Menu Icon (Aligned with Title) */
+        .menu-icon {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 30px;
+            height: 20px;
+            cursor: pointer;
+            margin-right: 15px; /* Space between menu and title */
+            transition: transform 0.3s ease;
+        }
+        .menu-icon span {
+            display: block;
+            width: 100%;
+            height: 4px;
+            background-color: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        .menu-icon.active span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+        .menu-icon.active span:nth-child(2) {
+            opacity: 0;
+        }
+        .menu-icon.active span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .logo img {
+            height: 60px;
+            padding: 2px 30px;
+            margin-right: 0;
+        }
+
+        header .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 230px;
+            background-color: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 70px;
+            left: -230px;
+            height: calc(100vh - 70px);
+            overflow-y: auto;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: left 0.3s ease-in-out;
+            padding: 20px 0;
+        }
+        .sidebar.active {
+            left: 0;
+        }
+        .sidebar a, .dropdown-btn {
+            text-decoration: none;
+            color: #333;
+            font-size: 1rem;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .sidebar a:hover, .dropdown-btn:hover {
+            background-color: #f1f5f9;
+            color: #2a9d8f;
+            border-left: 4px solid #2a9d8f;
+        }
+
+        /* Smooth Dropdown Content */
+        .dropdown-content {
+            display: flex;
+            flex-direction: column;
+            max-height: 0;
+            overflow: hidden;
+            padding-left: 20px;
+            transition: max-height 0.4s ease, opacity 0.4s ease;
+            opacity: 0;
+        }
+        .dropdown-content a {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        .dropdown-content a:hover {
+            background-color: #eef2f7;
+            color: #2a9d8f;
+            border-left: 3px solid #2a9d8f;
+        }
+        .dropdown.active .dropdown-content {
+            max-height: 500px;
+            opacity: 1;
+        }
+              /* Nội dung chính */
+        .content {
+            text-align: 10;
+            color: rgb(0, 0, 0);
+            padding: 100px 50px 60px 240px;
+        }
+
+        .content h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #2a9d8f;
+            text-shadow: 2px 2px 5px rgba(81, 160, 81, 0.7);
+        }
+        .content h2 { /* mục 1,2,3 */
+            font-size: 20px;
+            margin-top: 3%;
+            margin-bottom: 10px;
+            color: #2a9d8f;
+            text-shadow: 2px 2px 5px rgba(83, 182, 74, 0.7);
+        }
+        .content h3 { /* mục 1,2,3 */
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+
+        .content p {
+            font-size: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+/* Ban đầu submenu bị ẩn */
+.submenu {
+    display: none;
+    flex-direction: column;
+    padding-left: 20px;
+    background-color: #f9f9f9;
+    border-left: 2px solid #2a9d8f;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Kiểu dáng các mục trong submenu */
+.submenu a {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Hiệu ứng hover cho submenu */
+.submenu a:hover {
+    background-color: #eef2f7;
+    color: #2a9d8f;
+    border-left: 3px solid #2a9d8f;
+}
+
+/* Khi submenu được kích hoạt (thêm class 'active') */
+.dropdown-sub.active .submenu {
+    display: flex;
+}
+
+
+/* Hiệu ứng mục bên trong submenu */
+.submenu a {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.submenu a:hover {
+    background-color: #eef2f7;
+    color: #2a9d8f;
+    border-left: 3px solid #2a9d8f;
+}
+
+        /* Footer Styles */
+        footer {
+    background-color: #ffffff00;
+    color: rgb(0, 0, 0);
+    text-align: center;
+    padding: 15px 30px;
+    position: fixed;
+    bottom: 0;
+    left: 50%; /* Đặt điểm giữa footer theo chiều ngang */
+    transform: translateX(-50%); /* Dịch chuyển footer trở về chính giữa */
+    width: 50%; /* Giảm chiều ngang (tùy chỉnh) */
+    max-width: 1200px; /* Giới hạn chiều rộng tối đa */
+    font-size: 0.9rem;
+}
+
+
+        @media (max-width: 768px) {
+    .sidebar {
+        width: 200px; /* Adjust sidebar width for smaller screens */
+    }
+
+    .main-body {
+        margin-left: 0; /* Remove large margin for smaller screens */
+    }
+    .content {
+            text-align: 10;
+            color: rgb(0, 0, 0);
+            padding: 100px 50px 60px 24px;
+        }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .logo img {
+            height: 60px;
+            padding: 2px 1px;
+            margin-right: 100;
+        }
+    
+}
+@media (max-width: 768px) {
+    /* Điều chỉnh sidebar và content cho mobile */
+    .sidebar {
+        width: 200px;
+        left: -200px;
+    }
+
+    .content {
+        padding: 90px 15px 60px 15px; /* Giảm padding cho mobile */
+        width: 100%;
+    }
+
+    /* Điều chỉnh typography cho mobile */
+    .content h1 {
+        font-size: 32px; /* Giảm kích thước tiêu đề */
+        margin-bottom: 15px;
+    }
+
+    .content h2 {
+        font-size: 18px;
+        margin-top: 20px;
+    }
+
+    .content h3 {
+        font-size: 16px;
+    }
+
+    .content p {
+        font-size: 16px;
+        max-width: 100%; /* Cho phép nội dung sử dụng toàn bộ chiều rộng */
+    }
+
+    /* Điều chỉnh danh sách */
+    .content ul {
+        padding-left: 20px;
+    }
+
+    .content ul li {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    /* Điều chỉnh footer */
+    footer {
+        width: 90%;
+        padding: 10px 15px;
+    }
+}
+
+@media (min-width: 769px) {
+    .sidebar {
+        width: 230px; /* Default sidebar width for larger screens */
+    }
+
+    .main-body {
+        margin-left: 260px; /* Keep the sidebar space for desktops */
+    }
+}
+@media (max-width: 768px) {
+    .sidebar {
+        left: -200px; /* Hide the sidebar off-screen for mobile */
+    }
+    .sidebar.active {
+        left: 0; /* Slide in when active */
+    }
+}
+@media (max-width: 768px) {
+    .menu-icon {
+        width: 35px; /* Slightly larger for touch accessibility */
+        height: 25px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Header và Logo */
+    header {
+        padding: 0 8px;
+        height: 50px; /* Giảm chiều cao header */
+    }
+    
+    .logo {
+        font-size: 1rem;
+    }
+    
+    .logo img {
+        height: 30px;
+        padding: 2px 5px;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 60%;
+        max-width: 220px;
+        top: 50px;
+        height: calc(100vh - 50px);
+    }
+
+    /* Content - Điều chỉnh chiều rộng và padding */
+    .content {
+        padding: 60px 10px 50px 10px;
+        margin: 0 auto;
+        max-width: 100%;
+        width: 95%; /* Thu hẹp chiều rộng content */
+    }
+
+    /* Typography - Giảm font size */
+    .content h1 {
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+
+    .content h2 {
+        font-size: 16px;
+        margin-top: 15px;
+        margin-bottom: 8px;
+    }
+
+    .content h3 {
+        font-size: 14px;
+        line-height: 1.3;
+        margin-bottom: 8px;
+    }
+
+    .content p {
+        font-size: 13px;
+        line-height: 1.4;
+        margin-bottom: 10px;
+    }
+
+    /* Lists */
+    .content ul {
+        padding-left: 12px;
+        margin-bottom: 12px;
+    }
+
+    .content ul li {
+        font-size: 13px;
+        line-height: 1.3;
+        margin-bottom: 6px;
+    }
+
+    /* Menu Icon */
+    .menu-icon {
+        width: 20px;
+        height: 15px;
+        margin-right: 6px;
+    }
+
+    .menu-icon span {
+        height: 2px;
+    }
+
+    /* Footer */
+    footer {
+        padding: 8px;
+        font-size: 12px;
+    }
+}
+
+/* Màn hình cực nhỏ */
+@media (max-width: 375px) {
+    .content {
+        width: 92%; /* Thu hẹp thêm với màn hình nhỏ hơn */
+    }
+
+    .logo {
+        font-size: 0.9rem;
+    }
+
+    .logo img {
+        height: 25px;
+    }
+
+    .content h1 {
+        font-size: 16px;
+    }
+
+    .content h2 {
+        font-size: 15px;
+    }
+
+    .content h3, 
+    .content p, 
+    .content ul li {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Sidebar - Thu gọn */
+    .sidebar {
+        width: 50%; /* Giảm chiều rộng */
+        max-width: 180px; /* Giới hạn chiều rộng tối đa */
+        top: 50px;
+        height: calc(100vh - 50px);
+    }
+
+    /* Thu gọn các mục trong sidebar */
+    .sidebar a, .dropdown-btn {
+        padding: 8px 12px; /* Giảm padding */
+        font-size: 13px; /* Giảm font size */
+    }
+
+    .dropdown-content a {
+        padding: 6px 12px 6px 20px; /* Giảm padding, thêm indent */
+        font-size: 12px;
+    }
+
+    .submenu a {
+        padding: 6px 12px 6px 25px; /* Thêm indent cho submenu */
+        font-size: 12px;
+    }
+
+    /* Icon trong sidebar */
+    .sidebar .icon {
+        font-size: 14px;
+        margin-right: 8px;
+    }
+
+    /* Khoảng cách giữa các mục */
+    .dropdown-content {
+        padding-left: 10px;
+    }
+}
+
+/* Màn hình cực nhỏ */
+@media (max-width: 375px) {
+    .sidebar {
+        width: 55%;
+        max-width: 160px;
+    }
+
+    .sidebar a, .dropdown-btn {
+        font-size: 12px;
+        padding: 7px 10px;
+    }
+
+    .dropdown-content a, .submenu a {
+        font-size: 11px;
+        padding: 5px 10px 5px 15px;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="title-container">
+            <div class="menu-icon" id="menuIcon" onclick="toggleSidebar()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="logo">
+                Đam mê Kỹ năng
+                <img src="/logo/logoweb-dammekynang.png" alt="Đam mê Kỹ năng">
+            </div>
+        </div>
+        
+    </header>
+
+    <!-- Sidebar Section -->
+    <div class="sidebar" id="sidebar">
+        <a href="index.html"><span class="icon">🏠</span>Trang chủ</a>
+        <div class="dropdown">
+            <div class="dropdown-btn">
+                <span class="icon">📨</span>Tool Mật Thư<span>▼</span>
+            </div>
+            <div class="dropdown-content">
+                <div class="dropdown-sub">
+                    <a href="#" class="has-submenu">Thay thế</a>
+                    <div class="submenu">
+                        <a href="/toolmatthu/thaythe/chubangchuen.html">Chữ = Chữ EN</a>
+                        <a href="/toolmatthu/thaythe/sobangchuen.html">Số = Chữ EN</a>
+                        <a href="/toolmatthu/thaythe/chubangchuvn.html">Chữ = Chữ VN</a>
+                        <a href="/toolmatthu/thaythe/sobangchuvn.html">Số = Chữ VN</a>
+                        <a href="/toolmatthu/thaythe/khanhhoa.html">Khánh Hòa</a>
+                    </div>
+                </div>
+                <div class="dropdown-sub">
+                    <a href="#" class="has-submenu">Dời chỗ</a>
+                    <div class="submenu">
+                        <a href="/toolmatthu/doicho/camranh.html">CAM RANH</a>
+                        <a href="/toolmatthu/doicho/docnguoc.html">Đọc Ngược</a>
+                    </div>
+                </div>
+                <a href="#">Ẩn dấu</a>
+                <a href="#">Nâng cao</a>
+            </div>
+        </div>
+        
+        <div class="dropdown">
+            <div class="dropdown-btn">
+                <span class="icon">🐺</span>Ma Sói<span>▼</span>
+            </div>
+            <div class="dropdown-content">
+                <a href="/masoi/quantro.html">🤵 Quản Trò</a>
+                <a href="/masoi/huongdan.html">📜 Hướng dẫn</a>
+            </div>
+        </div>
+        <div class="dropdown">
+            <div class="dropdown-btn">
+                <span class="icon">📖</span>Tài liệu<span>▼</span>
+            </div>
+            <div class="dropdown-content">
+                <a href="/tailieu/banxoaymatthu.html">Bản xoay MT</a>
+                <a href="/tailieu/matthu.html">Mật thư</a>
+                <a href="/tailieu/muavadanvu.html">Múa, dân vũ</a>
+                <a href="/tailieu/nutday.html">Nút dây</a>
+                <a href="/tailieu/sinhhoatvongtron.html">SH vòng tròn</a>
+                <a href="/tailieu/thucongtrai.html">TC trại</a>
+                <a href="/tailieu/trochoilon.html">Trò chơi lớn</a>
+                <a href="/tailieu/trochoinho.html">Trò chơi nhỏ</a>
+            </div>
+        </div>
+        <a href="/lienhe.html"><span class="icon">📮</span> Liên hệ tôi</a>
+        <a href="/dieukhoan.html"><span class="icon">📄</span> Điều khoản</a>
+    </div>
+
+        <!-- Nội dung chính -->
+<section class="content">
+    <h1>Điều Khoản Sử Dụng</h1>
+    <h3>Chào mừng bạn đến với trang web của chúng tôi. Việc sử dụng trang web này đồng nghĩa với việc bạn đồng ý với các điều khoản sử dụng dưới đây. Vui lòng đọc kỹ trước khi sử dụng.</>
+
+    <h2>1. Chấp Nhận Điều Khoản</h2>
+    <h3>Bằng cách truy cập hoặc sử dụng trang web này, bạn xác nhận rằng bạn đã đọc, hiểu và đồng ý tuân thủ các điều khoản và điều kiện này. Nếu bạn không đồng ý với bất kỳ điều khoản nào, vui lòng không tiếp tục truy cập hoặc sử dụng trang web.</p>
+
+    <h2>2. Thay Đổi Điều Khoản</h2>
+    <h3>Chúng tôi có quyền cập nhật hoặc thay đổi các điều khoản sử dụng bất cứ lúc nào. Các thay đổi sẽ có hiệu lực ngay khi được đăng tải. Việc bạn tiếp tục sử dụng trang web sau khi có thay đổi sẽ được coi là đồng ý với các điều khoản mới. Bạn có trách nhiệm kiểm tra định kỳ các điều khoản để nắm rõ những thay đổi.</p>
+
+    <h2>3. Quyền Sở Hữu Trí Tuệ</h2>
+    <ul>
+        <li><strong>Bản quyền và Thương hiệu:</strong> Tất cả nội dung trên trang web, bao gồm nhưng không giới hạn ở văn bản, hình ảnh, đồ họa, biểu tượng, video, mã nguồn, phần mềm và các yếu tố khác, đều là tài sản của chúng tôi hoặc của các bên cấp phép. Các nội dung này được bảo vệ bởi luật sở hữu trí tuệ, bao gồm bản quyền, thương hiệu, và các quy định liên quan.</li>
+        <li><strong>Sử dụng Cá Nhân, Phi Thương Mại:</strong> Bạn được phép sử dụng nội dung trên trang web cho mục đích cá nhân, phi thương mại. Việc sao chép, tái sử dụng hoặc phân phối lại nội dung mà không có sự đồng ý bằng văn bản từ chúng tôi là vi phạm pháp luật và có thể dẫn đến các biện pháp pháp lý.</li>
+        <li><strong>Hành Vi Bị Cấm:</strong> Bất kỳ hành động nào nhằm phá hoại hoặc xâm phạm quyền sở hữu trí tuệ của chúng tôi đều bị nghiêm cấm.</li>
+    </ul>
+
+    <h2>4. Tài Khoản Người Dùng và Bảo Mật</h2>
+    <ul>
+        <li><strong>Đăng Ký Tài Khoản:</strong> Một số dịch vụ tương lai trên trang web yêu cầu bạn đăng ký tài khoản. Khi đăng ký, bạn đồng ý cung cấp thông tin chính xác, đầy đủ và cập nhật.</li>
+        <li><strong>Bảo Mật Tài Khoản:</strong> Bạn có trách nhiệm bảo mật thông tin đăng nhập của mình. Chúng tôi không chịu trách nhiệm về mọi thiệt hại phát sinh từ việc bạn không bảo mật tài khoản của mình.</li>
+        <li><strong>Hoạt Động Tài Khoản:</strong> Bạn chịu trách nhiệm về mọi hoạt động xảy ra dưới tài khoản của bạn. Nếu phát hiện bất kỳ hành vi sử dụng trái phép nào, bạn có trách nhiệm thông báo ngay cho chúng tôi.</li>
+    </ul>
+
+    <h2>5. Hành Vi Bị Cấm</h2>
+    <h3>Khi sử dụng trang web, bạn đồng ý không:</p>
+    <ul>
+        <li>Các tool phát triển với mục đích cho người ra đề mật thư có thể thử nghiệm lại mật thư. Nghiêm cấm sử dụng các tool để giải mật thư trong hành trình trò chơi lớn hoặc đối phó với người ra đề mật thư.</li>
+        <li>Các tài liệu về kỹ năng là mình đều sưu tầm, một số ít là của mình</li>
+        <li>Nếu sử dụng với mục đích vi phạm luật của trò chơi lớn, tôi miễn chịu trách nhiệm về hành vi vi phạm luật của bạn.</li>
+        <li>Phát tán hoặc truyền tải các nội dung có chứa virus, phần mềm độc hại, hoặc bất kỳ mã gây hại nào.</li>
+        <li>Thu thập hoặc lưu trữ thông tin cá nhân của người dùng khác mà không có sự đồng ý.</li>
+        <li>Giả mạo danh tính, mạo danh người khác hoặc cung cấp thông tin sai lệch.</li>
+        <li>Can thiệp vào hoạt động của trang web hoặc cố gắng truy cập vào các hệ thống, mạng lưới hoặc máy chủ mà không có sự cho phép.</li>
+        <li>Thực hiện các hành động gây tổn hại hoặc ảnh hưởng xấu đến trải nghiệm của người dùng khác.</li>
+    </ul>
+
+    <h2>6. Giới Hạn Trách Nhiệm</h2>
+    <ul>
+        <li><strong>Không Đảm Bảo:</strong> Trang web và các nội dung, dịch vụ được cung cấp dựa trên cơ sở "như hiện trạng" và "như sẵn có". Chúng tôi không đưa ra bất kỳ đảm bảo nào, dù là rõ ràng hay ngụ ý, về tính chính xác, độ tin cậy hoặc tính khả dụng của nội dung hoặc dịch vụ.</li>
+        <li><strong>Giới Hạn Thiệt Hại:</strong> Trong mọi trường hợp, chúng tôi không chịu trách nhiệm về bất kỳ thiệt hại gián tiếp, phụ thuộc, đặc biệt, hoặc hệ quả nào, bao gồm mất mát lợi nhuận, dữ liệu hoặc doanh thu phát sinh từ việc sử dụng hoặc không thể sử dụng trang web.</li>
+        <li><strong>Miễn Trừ Trách Nhiệm Bên Thứ Ba:</strong> Trang web có thể chứa liên kết đến các trang web của bên thứ ba. Chúng tôi không kiểm soát và không chịu trách nhiệm về nội dung, chính sách bảo mật hoặc các hoạt động của các trang web bên ngoài.</li>
+    </ul>
+
+    <h2>7. Chính Sách Bảo Mật</h2>
+    <h3>Việc thu thập, sử dụng và bảo vệ thông tin cá nhân của bạn tuân thủ theo Chính Sách Bảo Mật của chúng tôi, có thể được cập nhật thường xuyên. Khi sử dụng trang web, bạn đồng ý với các điều khoản bảo mật và các chính sách liên quan đến dữ liệu.</p>
+
+    <h2>8. Thay Đổi và Ngừng Dịch Vụ</h2>
+    <h3>Chúng tôi có quyền thay đổi, tạm ngưng hoặc ngừng bất kỳ dịch vụ hoặc nội dung nào trên trang web bất kỳ lúc nào mà không cần thông báo. Chúng tôi không chịu trách nhiệm về bất kỳ thiệt hại nào phát sinh từ việc ngừng dịch vụ hoặc thay đổi nội dung.</p>
+
+    <h2>9. Bồi Thường</h2>
+    <h3>Bạn đồng ý bồi thường, bảo vệ và giữ cho chúng tôi và các đối tác, nhân viên, đại lý không bị ảnh hưởng bởi bất kỳ khiếu nại, thiệt hại, tổn thất hoặc chi phí nào (bao gồm cả phí luật sư hợp lý) phát sinh từ việc vi phạm điều khoản này hoặc sử dụng trang web không đúng cách.</p>
+
+    <h2>10. Luật Áp Dụng và Giải Quyết Tranh Chấp</h2>
+    <ul>
+        <li><strong>Luật Áp Dụng:</strong> Điều khoản này sẽ được điều chỉnh và diễn giải theo luật pháp của [Quốc Gia của Bạn].</li>
+        <li><strong>Giải Quyết Tranh Chấp:</strong> Mọi tranh chấp phát sinh từ hoặc liên quan đến điều khoản sử dụng này sẽ được giải quyết thông qua thương lượng, hòa giải hoặc, nếu không thể giải quyết, thông qua tòa án có thẩm quyền tại [Nơi Thẩm Quyền].</li>
+    </ul>
+
+    <h2>11. Quyền và Tuyên Bố Miễn Trừ Trách Nhiệm</h2>
+    <ul>
+        <li><strong>Quyền Đơn Phương Chấm Dứt:</strong> Chúng tôi có quyền chấm dứt hoặc tạm ngưng quyền truy cập của bạn vào trang web bất kỳ lúc nào mà không cần thông báo nếu bạn vi phạm các điều khoản này.</li>
+        <li><strong>Miễn Trừ Trách Nhiệm Tối Đa:</strong> Trong mọi trường hợp, trách nhiệm pháp lý của chúng tôi đối với bạn sẽ không vượt quá số tiền bạn đã thanh toán (nếu có) cho chúng tôi trong vòng 6 tháng trước đó để sử dụng các dịch vụ trên trang web này.</li>
+    </ul>
+
+    <h2>12. Điều Khoản Khác</h2>
+    <ul>
+        <li><strong>Toàn Bộ Thỏa Thuận:</strong> Các điều khoản này cùng với Chính Sách Bảo Mật tạo thành toàn bộ thỏa thuận giữa bạn và chúng tôi liên quan đến việc sử dụng trang web.</li>
+        <li><strong>Tính Khả Thể:</strong> Nếu bất kỳ điều khoản nào trong đây bị coi là không hợp pháp hoặc không thể thực thi theo luật pháp, các điều khoản còn lại sẽ tiếp tục có hiệu lực.</li>
+        <li><strong>Không Từ Bỏ Quyền:</strong> Việc chúng tôi không thực thi bất kỳ quyền nào theo điều khoản này không được coi là từ bỏ quyền đó.</li>
+    </ul>
+
+    <h2>13. Liên Hệ</h2>
+    <h3>Nếu bạn có bất kỳ câu hỏi, yêu cầu hoặc khiếu nại nào liên quan đến điều khoản sử dụng này, vui lòng liên hệ với chúng tôi qua:</p>
+    <ul>
+        <li><strong>Email:</strong> cuong.dn@pctu.edu.vn</li>
+        <li><strong>Số điện thoại:</strong> 0369225402</li>
+        <li><strong>Địa chỉ:</strong> Điện Bàn - Quảng Nam</li>
+    </ul>
+</section>
+
+
+
+
+    <!-- Footer Section -->
+    <footer>
+        &copy; 2024 Đam Mê Kỹ Năng
+    </footer>
+
+    <script>
+        // Toggle Sidebar and Menu Icon Animation
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const menuIcon = document.getElementById('menuIcon');
+            sidebar.classList.toggle('active');
+            menuIcon.classList.toggle('active');
+        }
+
+        // Dropdown functionality
+        const dropdownButtons = document.querySelectorAll('.dropdown-btn');
+        dropdownButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const parent = btn.parentElement;
+                parent.classList.toggle('active');
+            });
+        });
+        document.addEventListener('click', (event) => {
+    const sidebar = document.getElementById('sidebar');
+    const menuIcon = document.getElementById('menuIcon');
+
+    // Check if the click is outside the sidebar and the menu button
+    if (!sidebar.contains(event.target) && !menuIcon.contains(event.target)) {
+        sidebar.classList.remove('active');
+        menuIcon.classList.remove('active');
+    }
+    // Lấy tất cả các phần tử có class 'has-submenu'
+const submenuTriggers = document.querySelectorAll('.has-submenu');
+
+submenuTriggers.forEach(trigger => {
+    trigger.addEventListener('click', function (e) {
+        e.preventDefault(); // Ngăn chặn hành vi mặc định của thẻ <a>
+
+        // Lấy phần tử cha (dropdown-sub) và toggle class 'active'
+        const parent = this.parentElement;
+        parent.classList.toggle('active');
+
+        // Đóng các submenu khác nếu cần
+        submenuTriggers.forEach(item => {
+            if (item !== this) {
+                item.parentElement.classList.remove('active');
+            }
+        });
+    });
+});
+
+});
+
+    </script>
+</body>
+</html>

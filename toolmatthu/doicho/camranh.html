@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chọn Thông Tin</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f0f4f8;
+    }
+    .container {
+      width: 50%;
+      margin: 50px auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #4CAF50;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select, button, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #4CAF50;
+      outline: none;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      background-color: #45a049;
+    }
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-top: -10px;
+      margin-bottom: 10px;
+    }
+    #otherPurposeInput {
+      display: none; /* Hidden by default */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Chọn Thông Tin</h2>
+
+    <!-- Họ và Tên -->
+    <label for="fullname">Họ và Tên:</label>
+    <input type="text" id="fullname" placeholder="Nhập họ và tên của bạn">
+
+    <!-- Tuổi -->
+    <label for="age">Tuổi:</label>
+    <input type="number" id="age" placeholder="Nhập tuổi của bạn" min="1">
+
+    <!-- Link Facebook -->
+    <label for="facebook">Link Facebook:</label>
+    <input type="url" id="facebook" placeholder="Nhập link Facebook của bạn">
+    <div id="facebookError" class="error" style="display: none;">Link phải chứa "facebook.com"</div>
+
+    <!-- Tỉnh/Thành phố -->
+    <label for="city">Tỉnh/Thành phố:</label>
+    <select id="city">
+      <option value="" selected>Chọn tỉnh thành</option>
+    </select>
+
+    <!-- Quận/Huyện -->
+    <label for="district">Quận/Huyện:</label>
+    <select id="district">
+      <option value="" selected>Chọn quận huyện</option>
+    </select>
+
+    <!-- Phường/Xã -->
+    <label for="ward">Phường/Xã:</label>
+    <select id="ward">
+      <option value="" selected>Chọn phường xã</option>
+    </select>
+
+    <!-- Mục đích sử dụng tool -->
+    <label for="purpose">Mục đích sử dụng tool:</label>
+    <select id="purpose">
+      <option value="curiosity">Tò mò</option>
+      <option value="check_encrypted">Kiểm tra lại đề mật thư</option>
+      <option value="decrypt">Dịch mật thư</option>
+      <option value="other">Khác</option>
+    </select>
+
+    <!-- Trường nhập văn bản khi chọn "Khác" -->
+    <div id="otherPurposeInput">
+      <label for="otherPurposeText">Mô tả mục đích:</label>
+      <textarea id="otherPurposeText" placeholder="Nhập mô tả mục đích sử dụng tool"></textarea>
+    </div>
+
+    <!-- Nút Lấy Key -->
+    <button id="getKeyButton" disabled>Lấy Key</button>
+    <div id="formError" class="error" style="display: none;">Vui lòng điền đầy đủ thông tin trước khi tiếp tục.</div>
+  </div>
+
+  <script>
+    // Các phần tử DOM
+    const citis = document.getElementById("city");
+    const districts = document.getElementById("district");
+    const wards = document.getElementById("ward");
+    const fullnameInput = document.getElementById("fullname");
+    const ageInput = document.getElementById("age");
+    const facebookInput = document.getElementById("facebook");
+    const getKeyButton = document.getElementById("getKeyButton");
+    const facebookError = document.getElementById("facebookError");
+    const formError = document.getElementById("formError");
+    const purposeSelect = document.getElementById("purpose");
+    const otherPurposeInput = document.getElementById("otherPurposeInput");
+    const otherPurposeText = document.getElementById("otherPurposeText");
+
+    // Kiểm tra link Facebook
+    facebookInput.addEventListener("input", function () {
+      if (facebookInput.value.includes("facebook.com") || facebookInput.value === "") {
+        facebookError.style.display = "none"; // Ẩn lỗi nếu hợp lệ
+      } else {
+        facebookError.style.display = "block"; // Hiển thị lỗi nếu không hợp lệ
+      }
+      validateForm();
+    });
+
+    // Kiểm tra các trường dữ liệu có đầy đủ không
+    function validateForm() {
+      if (
+        fullnameInput.value.trim() !== "" &&
+        ageInput.value.trim() !== "" &&
+        facebookInput.value.includes("facebook.com") &&
+        citis.value.trim() !== "" &&
+        districts.value.trim() !== "" &&
+        wards.value.trim() !== "" &&
+        (purposeSelect.value !== "other" || otherPurposeText.value.trim() !== "")
+      ) {
+        getKeyButton.disabled = false;
+        formError.style.display = "none";
+      } else {
+        getKeyButton.disabled = true;
+      }
+    }
+
+    // Gắn sự kiện kiểm tra vào các trường nhập liệu
+    [fullnameInput, ageInput, citis, districts, wards, purposeSelect, otherPurposeText].forEach((element) => {
+      element.addEventListener("input", validateForm);
+      element.addEventListener("change", validateForm);
+    });
+
+    // Sự kiện thay đổi Mục đích sử dụng tool
+    purposeSelect.addEventListener("change", function () {
+      if (this.value === "other") {
+        otherPurposeInput.style.display = "block"; // Hiện trường nhập văn bản khi chọn "Khác"
+      } else {
+        otherPurposeInput.style.display = "none"; // Ẩn trường nhập văn bản khi không chọn "Khác"
+      }
+      validateForm();
+    });
+
+// Thêm sự kiện nhấn nút Lấy Key
+getKeyButton.addEventListener("click", function () {
+  if (getKeyButton.disabled === false) {
+    // Lấy thông tin người dùng từ form
+    const userData = {
+      fullname: fullnameInput.value,
+      age: ageInput.value,
+      facebook: facebookInput.value,
+      city: citis.value,
+      district: districts.value,
+      ward: wards.value,
+      purpose: purposeSelect.value,
+      otherPurposeText: otherPurposeText.value,
+    };
+
+    // Gửi dữ liệu đến API để lấy key
+    axios.post('/getKey', userData)
+      .then(function (response) {
+        alert(`Thông tin đã được nhập đầy đủ. Key của bạn là: ${response.data.key}`);
+      })
+      .catch(function (error) {
+        if (error.response && error.response.data.message) {
+          alert(error.response.data.message);
+        } else {
+          alert('Đã xảy ra lỗi, vui lòng thử lại.');
+        }
+      });
+  } else {
+    formError.style.display = "block";
+  }
+});
+
+
+    // Cấu hình API
+    const Parameter = {
+      url: "https://raw.githubusercontent.com/kenzouno1/DiaGioiHanhChinhVN/master/data.json", 
+      method: "GET", 
+      responseType: "application/json", 
+    };
+
+    // Gọi API lấy dữ liệu
+    axios(Parameter).then(function (response) {
+      renderCity(response.data);
+    }).catch(function (error) {
+      console.error("Lỗi khi tải dữ liệu:", error);
+    });
+
+    // Hàm hiển thị tỉnh/thành phố
+    function renderCity(data) {
+      for (const x of data) {
+        const opt = document.createElement("option");
+        opt.value = x.Name;
+        opt.text = x.Name;
+        opt.setAttribute("data-id", x.Id);
+        citis.options.add(opt);
+      }
+
+      // Sự kiện thay đổi tỉnh/thành phố
+      citis.onchange = function () {
+        districts.length = 1; // Xóa các quận/huyện cũ
+        wards.length = 1; // Xóa các phường/xã cũ
+        if (this.options[this.selectedIndex].dataset.id !== "") {
+          const result = data.filter(n => n.Id === this.options[this.selectedIndex].dataset.id);
+
+          for (const k of result[0].Districts) {
+            const opt = document.createElement("option");
+            opt.value = k.Name;
+            opt.text = k.Name;
+            opt.setAttribute("data-id", k.Id);
+            districts.options.add(opt);
+          }
+        }
+      };
+
+      // Sự kiện thay đổi quận/huyện
+      districts.onchange = function () {
+        wards.length = 1;
+        if (this.options[this.selectedIndex].dataset.id !== "") {
+          const result = data.filter(n => n.Id === citis.options[citis.selectedIndex].dataset.id);
+          for (const t of result[0].Districts) {
+            if (t.Id === this.options[this.selectedIndex].dataset.id) {
+              for (const ward of t.Wards) {
+                const opt = document.createElement("option");
+                opt.value = ward.Name;
+                opt.text = ward.Name;
+                opt.setAttribute("data-id", ward.Id);
+                wards.options.add(opt);
+              }
+            }
+          }
+        }
+      };
+    }
+  </script>
+</body>
+</html>

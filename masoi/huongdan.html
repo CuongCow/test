@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng dẫn MA SÓI</title>
+    <link rel="icon" href="/logo/logoweb-dammekynang.png" type="image/png">
+    <style>
+        /* Reset and Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #000000;
+            display: flex;
+            color: #f0f0f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        header {
+            width: 100%;
+            height: 70px;
+            background-color: rgb(42, 157, 143);
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+            color: white;
+            position: fixed;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.425);
+        }
+        header .title-container {
+            display: flex;
+            align-items: center;
+        }
+        header h1 {
+            font-size: 2em;
+            margin-bottom: 0.2em;
+        }
+        main {
+            max-width: 3000px;
+            margin: 2em 15em;
+            padding: 0em;
+        }
+        h1 {
+            color: #e74c3c;
+            margin-top: 1.5em;
+            font-size: 3rem;
+            text-align: center;
+        }
+        h2 {
+            color: #e74c3c;
+            margin-top: 1.5em;
+        }
+        h4 {
+            color: #c9c9c9;
+            margin-top: 0.5em;
+            font-size: 1.3rem;
+            text-align: center;
+
+        }
+
+        section {
+            margin-bottom: 1.5em;
+        }
+
+        .role, .game-phase {
+            background-color: #1e1e1e;
+            padding: 1em;
+            margin-top: 0.5em;
+            border-radius: 8px;
+        }
+
+        .role h3, .game-phase h3 {
+            color: #2ecc71;
+        }
+
+        /* Menu Icon (Aligned with Title) */
+        .menu-icon {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 30px;
+            height: 20px;
+            cursor: pointer;
+            margin-right: 15px; /* Space between menu and title */
+            transition: transform 0.3s ease;
+        }
+        .menu-icon span {
+            display: block;
+            width: 100%;
+            height: 4px;
+            background-color: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        .menu-icon.active span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+        .menu-icon.active span:nth-child(2) {
+            opacity: 0;
+        }
+        .menu-icon.active span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .logo img {
+            height: 60px;
+            padding: 2px 30px;
+            margin-right: 0;
+        }
+
+        header .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 230px;
+            background-color: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 70px;
+            left: -230px;
+            height: calc(100vh - 70px);
+            overflow-y: auto;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: left 0.3s ease-in-out;
+            padding: 20px 0;
+        }
+        .sidebar.active {
+            left: 0;
+        }
+        .sidebar a, .dropdown-btn {
+            text-decoration: none;
+            color: #333;
+            font-size: 1rem;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .sidebar a:hover, .dropdown-btn:hover {
+            background-color: #f1f5f9;
+            color: #2a9d8f;
+            border-left: 4px solid #2a9d8f;
+        }
+
+        /* Smooth Dropdown Content */
+        .dropdown-content {
+            display: flex;
+            flex-direction: column;
+            max-height: 0;
+            overflow: hidden;
+            padding-left: 20px;
+            transition: max-height 0.4s ease, opacity 0.4s ease;
+            opacity: 0;
+        }
+        .dropdown-content a {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        .dropdown-content a:hover {
+            background-color: #eef2f7;
+            color: #2a9d8f;
+            border-left: 3px solid #2a9d8f;
+        }
+        .dropdown.active .dropdown-content {
+            max-height: 500px;
+            opacity: 1;
+        }
+              /* Nội dung chính */
+        .content {
+            text-align: 10;
+            color: rgb(0, 0, 0);
+            padding: 100px 50px 60px 240px;
+        }
+
+        .content h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #2a9d8f;
+            text-shadow: 2px 2px 5px rgba(81, 160, 81, 0.7);
+        }
+        .content h2 { /* mục 1,2,3 */
+            font-size: 20px;
+            margin-top: 3%;
+            margin-bottom: 10px;
+            color: #2a9d8f;
+            text-shadow: 2px 2px 5px rgba(83, 182, 74, 0.7);
+        }
+        .content h3 { /* mục 1,2,3 */
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+
+        .content p {
+            font-size: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+/* Ban đầu submenu bị ẩn */
+.submenu {
+    display: none;
+    flex-direction: column;
+    padding-left: 20px;
+    background-color: #f9f9f9;
+    border-left: 2px solid #2a9d8f;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Kiểu dáng các mục trong submenu */
+.submenu a {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Hiệu ứng hover cho submenu */
+.submenu a:hover {
+    background-color: #eef2f7;
+    color: #2a9d8f;
+    border-left: 3px solid #2a9d8f;
+}
+
+/* Khi submenu được kích hoạt (thêm class 'active') */
+.dropdown-sub.active .submenu {
+    display: flex;
+}
+
+
+/* Hiệu ứng mục bên trong submenu */
+.submenu a {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.submenu a:hover {
+    background-color: #eef2f7;
+    color: #2a9d8f;
+    border-left: 3px solid #2a9d8f;
+}
+
+        /* Footer Styles */
+        footer {
+    background-color: #ffffff00;
+    color: rgb(255, 255, 255);
+    text-align: center;
+    padding: 15px 30px;
+    position: fixed;
+    bottom: 0;
+    left: 50%; /* Đặt điểm giữa footer theo chiều ngang */
+    transform: translateX(-50%); /* Dịch chuyển footer trở về chính giữa */
+    width: 50%; /* Giảm chiều ngang (tùy chỉnh) */
+    max-width: 1200px; /* Giới hạn chiều rộng tối đa */
+    font-size: 0.9rem;
+}
+        ul {
+            margin-top: 0.5em;
+            padding-left: 1.5em;
+        }
+
+        li {
+            margin-bottom: 0.5em;
+        }
+
+
+        @media (max-width: 768px) {
+    .sidebar {
+        width: 200px; /* Adjust sidebar width for smaller screens */
+    }
+
+    .main-body {
+        margin-left: 0; /* Remove large margin for smaller screens */
+    }
+    main {
+            max-width: 3000px;
+            margin: 2em 1em;
+            padding: 0em;
+        }
+    .content {
+            text-align: 10;
+            color: rgb(0, 0, 0);
+            padding: 100px 50px 60px 24px;
+        }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        .logo img {
+            height: 60px;
+            padding: 2px 1px;
+            margin-right: 100;
+        }
+        /* Footer Styles */
+        footer {
+    background-color: #ffffff00;
+    color: rgb(255, 255, 255);
+    text-align: center;
+    padding: 15px 0px;
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50%;
+    max-width: 1200px;
+    font-size: 1rem;
+    z-index: 1;
+}
+}
+
+@media (min-width: 769px) {
+    .sidebar {
+        width: 230px; /* Default sidebar width for larger screens */
+    }
+
+    .main-body {
+        margin-left: 260px; /* Keep the sidebar space for desktops */
+    }
+}
+@media (max-width: 768px) {
+    .sidebar {
+        left: -200px; /* Hide the sidebar off-screen for mobile */
+    }
+    .sidebar.active {
+        left: 0; /* Slide in when active */
+    }
+}
+@media (max-width: 768px) {
+    .menu-icon {
+        width: 35px; /* Slightly larger for touch accessibility */
+        height: 25px;
+    }
+}
+
+
+
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="title-container">
+            <div class="menu-icon" id="menuIcon" onclick="toggleSidebar()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="logo">
+                Đam mê Kỹ năng
+                <img src="/logo/logoweb-dammekynang.png" alt="Đam mê Kỹ năng">
+            </div>
+        </div>
+        
+    </header>
+
+    <!-- Sidebar Section -->
+    <div class="sidebar" id="sidebar">
+        <a href="/index.html"><span class="icon">🏠</span>Trang chủ</a>
+        <div class="dropdown">
+            <div class="dropdown-btn">
+                <span class="icon">📨</span>Tool Mật Thư<span>▼</span>
+            </div>
+            <div class="dropdown-content">
+                <div class="dropdown-sub">
+                    <a href="#" class="has-submenu">Thay thế</a>
+                    <div class="submenu">
+                        <a href="/toolmatthu/thaythe/chubangchuen.html">Chữ = Chữ EN</a>
+                        <a href="/toolmatthu/thaythe/sobangchuen.html">Số = Chữ EN</a>
+                        <a href="/toolmatthu/thaythe/chubangchuvn.html">Chữ = Chữ VN</a>
+                        <a href="/toolmatthu/thaythe/sobangchuvn.html">Số = Chữ VN</a>
+                        <a href="/toolmatthu/thaythe/khanhhoa.html">Khánh Hòa</a>
+                    </div>
+                </div>
+                <div class="dropdown-sub">
+                    <a href="#" class="has-submenu">Dời chỗ</a>
+                    <div class="submenu">
+                        <a href="/toolmatthu/doicho/camranh.html">CAM RANH</a>
+                        <a href="/toolmatthu/doicho/docnguoc.html">Đọc Ngược</a>
+                    </div>
+                </div>
+                <a href="#">Ẩn dấu</a>
+                <a href="#">Nâng cao</a>
+            </div>
+        </div>
+        
+        <div class="dropdown">
+            <div class="dropdown-btn">
+                <span class="icon">🐺</span>Ma Sói<span>▼</span>
+            </div>
+            <div class="dropdown-content">
+                <a href="/masoi/quantro.html">🤵 Quản Trò</a>
+                <a href="/masoi/huongdan.html">📜 Hướng dẫn</a>
+            </div>
+        </div>
+        <div class="dropdown">
+            <div class="dropdown-btn">
+                <span class="icon">📖</span>Tài liệu<span>▼</span>
+            </div>
+            <div class="dropdown-content">
+                <a href="/tailieu/banxoaymatthu.html">Bản xoay MT</a>
+                <a href="/tailieu/matthu.html">Mật thư</a>
+                <a href="/tailieu/muavadanvu.html">Múa, dân vũ</a>
+                <a href="/tailieu/nutday.html">Nút dây</a>
+                <a href="/tailieu/sinhhoatvongtron.html">SH vòng tròn</a>
+                <a href="/tailieu/thucongtrai.html">TC trại</a>
+                <a href="/tailieu/trochoilon.html">Trò chơi lớn</a>
+                <a href="/tailieu/trochoinho.html">Trò chơi nhỏ</a>
+            </div>
+        </div>
+        <a href="/lienhe.html"><span class="icon">📮</span> Liên hệ tôi</a>
+        <a href="/dieukhoan.html"><span class="icon">📄</span> Điều khoản</a>
+    </div>
+    
+
+        <!-- Nội dung chính -->
+        <main>
+            
+            <!-- Tổng Quan -->
+            <section id="overview">
+                <h1>Hướng dẫn</h1>
+                <h4>Khám phá cách chơi Ma Sói từ A-Z để có những trải nghiệm tuyệt vời cùng bạn bè!</h4>
+
+                <h2>Tổng Quan</h2>
+                <p>
+                    <strong>Số người chơi</strong>: Từ 8 - 20 người (bao gồm cả Quản trò).
+                </p>
+                <p>
+                    <strong>Mục tiêu của trò chơi</strong>: 
+                    <ul>
+                        <li><strong>Phe dân làng</strong>: Loại bỏ tất cả Ma Sói để bảo vệ ngôi làng.</li>
+                        <li><strong>Phe Ma Sói</strong>: Tiêu diệt toàn bộ dân làng mà không bị phát hiện.</li>
+                        <li><strong>Phe thứ ba</strong>: Đạt được mục tiêu cá nhân dựa trên vai trò đặc biệt của mình.</li>
+                    </ul>
+                </p>
+            </section>
+            
+            <!-- Thành Phần Người Chơi -->
+            <section id="roles">
+                <h2>Thành Phần Người Chơi</h2>
+                <div class="role" id="villager">
+                    <h3>Dân Làng</h3>
+                    <p>Không có năng lực đặc biệt. Mục tiêu là tìm ra Ma Sói dựa vào suy luận vào ban ngày.</p>
+                </div>
+                <div class="role" id="werewolf">
+                    <h3>Ma Sói</h3>
+                    <p>Giết dân làng vào ban đêm mà không bị phát hiện. Ma Sói họp kín để chọn nạn nhân mỗi đêm.</p>
+                </div>
+                <div class="role" id="seer">
+                    <h3>Tiên Tri</h3>
+                    <p>Mỗi đêm, Tiên Tri có thể chọn một người và hỏi Quản trò xem người đó có phải là Ma Sói hay không.</p>
+                </div>
+                <div class="role" id="protector">
+                    <h3>Bảo Vệ</h3>
+                    <p>Bảo Vệ có thể bảo vệ một người mỗi đêm, ngăn không cho người đó bị giết. Không thể bảo vệ cùng một người trong hai đêm liên tiếp.</p>
+                </div>
+                <div class="role" id="witch">
+                    <h3>Phù Thủy</h3>
+                    <p>Phù Thủy có hai bình thuốc: một bình cứu sống và một bình giết người. Phù Thủy có thể chọn sử dụng mỗi bình một lần trong trò chơi.</p>
+                </div>
+                <div class="role" id="lover">
+                    <h3>Thần Tình Yêu</h3>
+                    <p>Quản trò ghép đôi hai người chơi. Nếu một người trong cặp đôi chết, người còn lại sẽ chết theo.</p>
+                </div>
+                <div class="role" id="hunter">
+                    <h3>Thợ Săn</h3>
+                    <p>Nếu Thợ Săn chết, người đó có thể chọn một người khác để chết cùng.</p>
+                </div>
+                <div class="role" id="fool">
+                    <h3>Thằng Ngố</h3>
+                    <p>Nếu bị dân làng xử tử, Thằng Ngố thắng riêng và trò chơi kết thúc. Nếu bị Ma Sói giết, trò chơi vẫn tiếp tục.</p>
+                </div>
+            </section>
+    
+            <!-- Quy Trình Chơi -->
+            <section id="gameplay">
+                <h2>Quy Trình Chơi</h2>
+                <div class="game-phase">
+                    <h3>1. Chuẩn Bị</h3>
+                    <p>Quản trò phân vai trò cho người chơi và giữ bí mật vai trò của từng người. Các vai trò đặc biệt được thông báo trước khi bắt đầu.</p>
+                </div>
+                <div class="game-phase">
+                    <h3>2. Ban Đêm</h3>
+                    <p>Quản trò gọi tên từng vai trò đặc biệt theo thứ tự và họ thực hiện hành động của mình:</p>
+                    <ul>
+                        <li>**Thần Tình Yêu**: Chọn hai người làm cặp đôi yêu nhau.</li>
+                        <li>**Ma Sói**: Họp kín để chọn người sẽ bị giết.</li>
+                        <li>**Bảo Vệ**: Chọn người bảo vệ.</li>
+                        <li>**Phù Thủy**: Biết nạn nhân và có thể dùng thuốc cứu hoặc giết.</li>
+                        <li>**Tiên Tri**: Chọn một người để kiểm tra vai trò.</li>
+                    </ul>
+                </div>
+                <div class="game-phase">
+                    <h3>3. Ban Ngày</h3>
+                    <p>Dân làng thảo luận để tìm ra ai là Ma Sói, sau đó bỏ phiếu xử tử. Người bị xử tử sẽ tiết lộ vai trò của mình.</p>
+                </div>
+                <div class="game-phase">
+                    <h3>4. Kết Thúc Trò Chơi</h3>
+                    <ul>
+                        <li>Phe dân làng thắng nếu tất cả Ma Sói bị loại bỏ.</li>
+                        <li>Phe Ma Sói thắng nếu số Ma Sói bằng số dân làng còn lại.</li>
+                        <li>Các phe đặc biệt khác thắng khi đạt mục tiêu riêng.</li>
+                    </ul>
+                </div>
+            </section>
+    
+            <!-- Mẹo và Lưu Ý -->
+            <section id="tips">
+                <h2>Mẹo và Lưu Ý</h2>
+                <ul>
+                    <li>Thảo luận và suy luận logic để tìm Ma Sói hoặc bảo vệ danh tính của mình.</li>
+                    <li>Lời nói dối chiến lược có thể giúp bạn bảo vệ vai trò của mình.</li>
+                    <li>Hãy quan sát biểu hiện và lời nói của người khác để tìm ra điểm đáng ngờ.</li>
+                </ul>
+            </section>
+    
+            <!-- Vai Trò Mở Rộng -->
+            <section id="extended-roles">
+                <h2>Tùy Chọn Vai Trò Mở Rộng</h2>
+                <ul>
+                    <li>**Ma Sói Con**: Nếu bị giết, đêm sau Ma Sói có thể giết hai người.</li>
+                    <li>**Pháp Sư**: Có thể đổi vai trò của mình với một người khác.</li>
+                    <li>**Dân làng Báo Thù**: Có quyền chọn một người để cùng chết khi chết.</li>
+                </ul>
+            </section>
+        </main>
+
+
+
+    <!-- Footer Section -->
+    <footer>
+        &copy; 2024 Đam Mê Kỹ Năng
+    </footer>
+
+    <script>
+        // Toggle Sidebar and Menu Icon Animation
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const menuIcon = document.getElementById('menuIcon');
+            sidebar.classList.toggle('active');
+            menuIcon.classList.toggle('active');
+        }
+
+        // Dropdown functionality
+        const dropdownButtons = document.querySelectorAll('.dropdown-btn');
+        dropdownButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const parent = btn.parentElement;
+                parent.classList.toggle('active');
+            });
+        });
+        document.addEventListener('click', (event) => {
+    const sidebar = document.getElementById('sidebar');
+    const menuIcon = document.getElementById('menuIcon');
+
+    // Check if the click is outside the sidebar and the menu button
+    if (!sidebar.contains(event.target) && !menuIcon.contains(event.target)) {
+        sidebar.classList.remove('active');
+        menuIcon.classList.remove('active');
+    }
+    // Lấy tất cả các phần tử có class 'has-submenu'
+const submenuTriggers = document.querySelectorAll('.has-submenu');
+
+submenuTriggers.forEach(trigger => {
+    trigger.addEventListener('click', function (e) {
+        e.preventDefault(); // Ngăn chặn hành vi mặc định của thẻ <a>
+
+        // Lấy phần tử cha (dropdown-sub) và toggle class 'active'
+        const parent = this.parentElement;
+        parent.classList.toggle('active');
+
+        // Đóng các submenu khác nếu cần
+        submenuTriggers.forEach(item => {
+            if (item !== this) {
+                item.parentElement.classList.remove('active');
+            }
+        });
+    });
+});
+
+});
+
+    </script>
+</body>
+</html>
