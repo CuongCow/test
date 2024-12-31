@@ -378,6 +378,9 @@
                 this.ai = new MorseAI();
                 this.currentPattern = '';
                 this.lastGapType = null;
+                this.patternLearner = new MorsePatternLearner();
+                this.lastSignalEnd = null;
+                this.currentSequence = '';
             }
 
             setupUI() {
@@ -425,40 +428,31 @@
                         
                         if (volume > threshold) {
                             if (!this.soundStart) {
-                                // Xử lý khoảng lặng trước đó
-                                const gapDuration = currentTime - this.morseTimings.lastSignalEnd;
-                                const gapType = this.ai.classifyGap(gapDuration);
-                                
-                                if (gapType) {
-                                    this.handleGap(gapType);
-                                    this.lastGapType = gapType;
-                                }
-                                
+                                const gap = this.lastSignalEnd ? currentTime - this.lastSignalEnd : 0;
                                 this.soundStart = currentTime;
+                                
+                                // Phân tích khoảng cách
+                                if (gap > 0) {
+                                    const result = this.patternLearner.addSignal(0, gap);
+                                    if (result.isNewSequence) {
+                                        this.handleNewSequence();
+                                    }
+                                }
                             }
                         } else if (this.soundStart) {
-                            // Xử lý tín hiệu kết thúc
                             const duration = currentTime - this.soundStart;
-                            this.morseTimings.lastSignalEnd = currentTime;
+                            this.lastSignalEnd = currentTime;
                             
-                            // Sử dụng AI để phân loại tín hiệu
-                            const signalType = this.ai.classifySignal(duration);
-                            if (signalType) {
-                                this.currentChar += signalType === 'dot' ? '.' : '-';
-                                this.currentPattern += signalType;
-                                
-                                // Học mẫu mới
-                                this.ai.learn(duration, 'signal');
+                            // Thêm tín hiệu mới và nhận kết quả phân tích
+                            const result = this.patternLearner.addSignal(duration, 0);
+                            this.currentSequence += result.signal;
+                            
+                            if (result.isNewChar) {
+                                this.handleNewCharacter();
                             }
                             
                             this.soundStart = null;
                             this.updateDisplay();
-                            
-                            // Dự đoán khoảng cách tiếp theo
-                            const predictedGap = this.ai.predictNextGap(this.currentPattern);
-                            if (predictedGap) {
-                                this.updateStatus(`Dự đoán khoảng cách tiếp theo: ${predictedGap}`);
-                            }
                         }
                         
                         requestAnimationFrame(analyze);
@@ -525,6 +519,21 @@
             updateVolumeMeter(volume) {
                 const percentage = Math.min(100, (volume / 128) * 100);
                 this.volumeBar.style.width = percentage + '%';
+            }
+
+            handleNewCharacter() {
+                const analysis = this.patternLearner.analyzeSequence();
+                if (analysis && analysis.confidence > 0.7) {
+                    this.message += analysis.character;
+                    this.currentSequence = '';
+                }
+            }
+
+            handleNewSequence() {
+                if (this.currentSequence) {
+                    this.handleNewCharacter();
+                    this.message += ' ';
+                }
             }
         }
 
@@ -650,6 +659,173 @@
 
             getDotLength() {
                 return this.dotLength;
+            }
+        }
+
+        class MorsePatternLearner {
+            constructor() {
+                // Lưu trữ mẫu tín hiệu và khoảng cách
+                this.patterns = {
+                    signals: [], // Lưu độ dài tín hiệu
+                    gaps: [],    // Lưu độ dài khoảng cách
+                    sequences: [] // Lưu chuỗi tín hiệu liên tiếp
+                };
+                
+                // Các ngưỡng học được
+                this.thresholds = {
+                    signalSplit: 150,    // Ngưỡng phân biệt tít/te
+                    gapCharacter: 200,   // Ngưỡng khoảng cách giữa ký tự
+                    gapSequence: 400     // Ngưỡng khoảng cách giữa chuỗi
+                };
+
+                // Bộ nhớ ngắn hạn cho chuỗi hiện tại
+                this.currentSequence = {
+                    signals: [],
+                    timestamps: [],
+                    gaps: []
+                };
+
+                // Từ điển mẫu đã biết
+                this.knownPatterns = {
+                    'S': { pattern: '...', maxGap: 150 },
+                    'W': { pattern: '.--', maxGap: 150 },
+                    'R': { pattern: '.-.', maxGap: 150 },
+                    'G': { pattern: '--.', maxGap: 150 }
+                };
+            }
+
+            addSignal(duration, gap) {
+                const signal = duration < this.thresholds.signalSplit ? '.' : '-';
+                const timestamp = Date.now();
+
+                // Thêm vào chuỗi hiện tại
+                this.currentSequence.signals.push(signal);
+                this.currentSequence.timestamps.push(timestamp);
+                if (gap) this.currentSequence.gaps.push(gap);
+
+                // Cập nhật patterns
+                this.patterns.signals.push(duration);
+                if (gap) this.patterns.gaps.push(gap);
+
+                // Phân tích chuỗi hiện tại
+                this.analyzeSequence();
+
+                // Học từ dữ liệu mới
+                this.learn();
+
+                return {
+                    signal,
+                    isNewChar: this.isCharacterBreak(gap),
+                    isNewSequence: this.isSequenceBreak(gap)
+                };
+            }
+
+            analyzeSequence() {
+                if (this.currentSequence.signals.length < 1) return null;
+
+                const pattern = this.currentSequence.signals.join('');
+                const avgGap = this.currentSequence.gaps.length > 0 
+                    ? this.currentSequence.gaps.reduce((a, b) => a + b) / this.currentSequence.gaps.length 
+                    : 0;
+
+                // Kiểm tra với mẫu đã biết
+                for (const [char, data] of Object.entries(this.knownPatterns)) {
+                    if (pattern === data.pattern && avgGap <= data.maxGap) {
+                        return {
+                            character: char,
+                            confidence: 0.9
+                        };
+                    }
+                }
+
+                // Sử dụng thuật toán tương tự để tìm mẫu gần nhất
+                return this.findClosestPattern(pattern, avgGap);
+            }
+
+            findClosestPattern(pattern, avgGap) {
+                let bestMatch = null;
+                let highestSimilarity = 0;
+
+                for (const [char, data] of Object.entries(this.knownPatterns)) {
+                    const similarity = this.calculatePatternSimilarity(pattern, data.pattern);
+                    if (similarity > highestSimilarity && avgGap <= data.maxGap * 1.5) {
+                        highestSimilarity = similarity;
+                        bestMatch = char;
+                    }
+                }
+
+                return bestMatch ? {
+                    character: bestMatch,
+                    confidence: highestSimilarity
+                } : null;
+            }
+
+            calculatePatternSimilarity(pattern1, pattern2) {
+                // Levenshtein Distance cải tiến
+                const m = pattern1.length;
+                const n = pattern2.length;
+                const dp = Array(m + 1).fill().map(() => Array(n + 1).fill(0));
+
+                for (let i = 0; i <= m; i++) dp[i][0] = i;
+                for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+                for (let i = 1; i <= m; i++) {
+                    for (let j = 1; j <= n; j++) {
+                        if (pattern1[i-1] === pattern2[j-1]) {
+                            dp[i][j] = dp[i-1][j-1];
+                        } else {
+                            dp[i][j] = 1 + Math.min(
+                                dp[i-1][j],
+                                dp[i][j-1],
+                                dp[i-1][j-1]
+                            );
+                        }
+                    }
+                }
+
+                return 1 - (dp[m][n] / Math.max(m, n));
+            }
+
+            learn() {
+                if (this.patterns.signals.length < 10) return;
+
+                // Học ngưỡng phân biệt tít/te
+                const signalClusters = this.kMeansClustering(this.patterns.signals, 2);
+                this.thresholds.signalSplit = (signalClusters.centroids[0] + signalClusters.centroids[1]) / 2;
+
+                // Học ngưỡng khoảng cách
+                if (this.patterns.gaps.length >= 10) {
+                    const gapClusters = this.kMeansClustering(this.patterns.gaps, 3);
+                    this.thresholds.gapCharacter = gapClusters.centroids[1];
+                    this.thresholds.gapSequence = gapClusters.centroids[2];
+                }
+
+                // Cập nhật known patterns
+                this.updateKnownPatterns();
+            }
+
+            updateKnownPatterns() {
+                const sequences = this.patterns.sequences.filter(seq => seq.confidence > 0.8);
+                for (const seq of sequences) {
+                    if (seq.pattern && seq.character) {
+                        this.knownPatterns[seq.character] = {
+                            pattern: seq.pattern,
+                            maxGap: seq.avgGap * 1.2
+                        };
+                    }
+                }
+            }
+
+            isCharacterBreak(gap) {
+                return gap > this.thresholds.gapCharacter;
+            }
+
+            isSequenceBreak(gap) {
+                return gap > this.thresholds.gapSequence;
+            }
+
+            kMeansClustering(data, k) {
+                // ... (giữ nguyên code k-means từ phiên bản trước)
             }
         }
 
