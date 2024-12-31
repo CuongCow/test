@@ -121,6 +121,53 @@
     </div>
 
     <script>
+        class MorseTimings {
+            constructor() {
+                this.DOT_LENGTH = 100;           // Độ dài cơ bản của một dấu chấm
+                this.DASH_LENGTH = this.DOT_LENGTH * 3;    // Dấu gạch = 3 dấu chấm
+                this.SYMBOL_SPACE = this.DOT_LENGTH;       // Khoảng cách giữa các dấu trong ký tự
+                this.LETTER_SPACE = this.DOT_LENGTH * 3;   // Khoảng cách giữa các ký tự
+                this.WORD_SPACE = this.DOT_LENGTH * 7;     // Khoảng cách giữa các từ
+                
+                this.lastSignalEnd = 0;          // Thời điểm kết thúc tín hiệu cuối
+                this.currentWord = '';           // Từ hiện tại đang xử lý
+                this.currentMessage = [];        // Mảng các từ đã xử lý
+            }
+
+            processSilence(currentTime) {
+                if (!this.lastSignalEnd) return;
+
+                const silenceDuration = currentTime - this.lastSignalEnd;
+
+                // Khoảng cách giữa các từ
+                if (silenceDuration > this.WORD_SPACE) {
+                    if (this.currentWord) {
+                        this.currentMessage.push(this.currentWord);
+                        this.currentWord = '';
+                        return 'WORD_BREAK';
+                    }
+                }
+                // Khoảng cách giữa các ký tự
+                else if (silenceDuration > this.LETTER_SPACE) {
+                    return 'LETTER_BREAK';
+                }
+                // Khoảng cách giữa các dấu trong ký tự
+                else if (silenceDuration > this.SYMBOL_SPACE) {
+                    return 'SYMBOL_BREAK';
+                }
+
+                return null;
+            }
+
+            updateTimings(dotLength) {
+                this.DOT_LENGTH = dotLength;
+                this.DASH_LENGTH = dotLength * 3;
+                this.SYMBOL_SPACE = dotLength;
+                this.LETTER_SPACE = dotLength * 3;
+                this.WORD_SPACE = dotLength * 7;
+            }
+        }
+
         class MorseDecoder {
             constructor() {
                 this.MORSE_TO_CHAR = {
@@ -137,6 +184,9 @@
                 this.soundStart = null;
                 this.setupUI();
                 this.adaptiveThreshold = new AdaptiveThreshold();
+                this.morseTimings = new MorseTimings();
+                this.currentChar = '';
+                this.message = '';
             }
 
             setupUI() {
@@ -176,33 +226,33 @@
                         this.updateVolumeMeter(volume);
                         
                         const currentTime = Date.now();
-                        
-                        // Thêm mẫu mới vào adaptive threshold
-                        this.adaptiveThreshold.addSample(volume, 
-                            this.soundStart ? currentTime - this.soundStart : 0);
-                        
                         const threshold = this.adaptiveThreshold.getThreshold();
                         const dotLength = this.adaptiveThreshold.getDotLength();
                         
+                        // Cập nhật timing dựa trên độ dài dot mới học được
+                        this.morseTimings.updateTimings(dotLength);
+                        
                         if (volume > threshold) {
+                            // Xử lý khoảng lặng trước khi có tín hiệu mới
                             if (!this.soundStart) {
+                                const breakType = this.morseTimings.processSilence(currentTime);
+                                this.handleBreak(breakType);
                                 this.soundStart = currentTime;
                             }
                         } else if (this.soundStart) {
+                            // Xử lý tín hiệu kết thúc
                             const duration = currentTime - this.soundStart;
-                            if (duration > dotLength * 1.5) {
-                                this.currentMorse += '-';
-                            } else {
-                                this.currentMorse += '.';
-                            }
-                            this.soundStart = null;
-                            this.updateCurrentMorse();
+                            this.morseTimings.lastSignalEnd = currentTime;
                             
-                            setTimeout(() => {
-                                if (!this.soundStart) {
-                                    this.decodeMorse();
-                                }
-                            }, dotLength * 3);
+                            // Phân biệt dấu chấm và gạch ngang
+                            if (duration > this.morseTimings.DASH_LENGTH * 0.7) {
+                                this.currentChar += '-';
+                            } else {
+                                this.currentChar += '.';
+                            }
+                            
+                            this.soundStart = null;
+                            this.updateDisplay();
                         }
                         
                         requestAnimationFrame(analyze);
@@ -231,17 +281,35 @@
                 }
             }
 
-            decodeMorse() {
-                if (!this.currentMorse) return;
-                
-                const char = this.MORSE_TO_CHAR[this.currentMorse] || '?';
-                document.getElementById('result').textContent += char;
-                this.currentMorse = '';
-                this.updateCurrentMorse();
+            handleBreak(breakType) {
+                if (!breakType) return;
+
+                switch (breakType) {
+                    case 'WORD_BREAK':
+                        this.decodeMorse();
+                        this.message += ' ';
+                        break;
+                    case 'LETTER_BREAK':
+                        this.decodeMorse();
+                        break;
+                    case 'SYMBOL_BREAK':
+                        // Tiếp tục thu thập các dấu cho ký tự hiện tại
+                        break;
+                }
             }
 
-            updateCurrentMorse() {
-                document.getElementById('currentMorse').textContent = this.currentMorse;
+            decodeMorse() {
+                if (!this.currentChar) return;
+                
+                const char = this.MORSE_TO_CHAR[this.currentChar] || '?';
+                this.message += char;
+                this.currentChar = '';
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                document.getElementById('currentMorse').textContent = this.currentChar;
+                document.getElementById('result').textContent = this.message;
             }
 
             updateStatus(message) {
