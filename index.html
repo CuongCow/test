@@ -168,6 +168,194 @@
             }
         }
 
+        class MorseAI {
+            constructor() {
+                // Mô hình học cho khoảng cách
+                this.patterns = {
+                    signals: [], // Độ dài tín hiệu
+                    gaps: [],    // Độ dài khoảng cách
+                    words: []    // Mẫu từ đã học được
+                };
+                
+                // Tham số học
+                this.maxPatterns = 100;
+                this.minSamples = 5;
+                this.confidenceThreshold = 0.8;
+                
+                // Clustering parameters
+                this.clusters = {
+                    dot: { mean: 100, std: 20 },
+                    dash: { mean: 300, std: 60 },
+                    symbolGap: { mean: 100, std: 20 },
+                    letterGap: { mean: 300, std: 60 },
+                    wordGap: { mean: 700, std: 140 }
+                };
+            }
+
+            learn(duration, type) {
+                // Thêm mẫu mới
+                if (type === 'signal') {
+                    this.patterns.signals.push(duration);
+                } else {
+                    this.patterns.gaps.push(duration);
+                }
+
+                // Giới hạn số lượng mẫu
+                if (this.patterns.signals.length > this.maxPatterns) {
+                    this.patterns.signals.shift();
+                }
+                if (this.patterns.gaps.length > this.maxPatterns) {
+                    this.patterns.gaps.shift();
+                }
+
+                // Cập nhật clusters nếu có đủ mẫu
+                if (this.patterns.signals.length >= this.minSamples) {
+                    this.updateClusters();
+                }
+            }
+
+            updateClusters() {
+                // Phân cụm tín hiệu thành dots và dashes
+                const signalClusters = this.kMeansCluster(this.patterns.signals, 2);
+                const gapClusters = this.kMeansCluster(this.patterns.gaps, 3);
+
+                // Cập nhật thông số clusters
+                if (signalClusters.length >= 2) {
+                    // Dot cluster là cluster có mean thấp hơn
+                    const [dotCluster, dashCluster] = signalClusters.sort((a, b) => a.mean - b.mean);
+                    
+                    this.clusters.dot = {
+                        mean: dotCluster.mean,
+                        std: Math.sqrt(dotCluster.variance)
+                    };
+                    this.clusters.dash = {
+                        mean: dashCluster.mean,
+                        std: Math.sqrt(dashCluster.variance)
+                    };
+                }
+
+                if (gapClusters.length >= 3) {
+                    const [symbolGap, letterGap, wordGap] = gapClusters.sort((a, b) => a.mean - b.mean);
+                    
+                    this.clusters.symbolGap = {
+                        mean: symbolGap.mean,
+                        std: Math.sqrt(symbolGap.variance)
+                    };
+                    this.clusters.letterGap = {
+                        mean: letterGap.mean,
+                        std: Math.sqrt(letterGap.variance)
+                    };
+                    this.clusters.wordGap = {
+                        mean: wordGap.mean,
+                        std: Math.sqrt(wordGap.variance)
+                    };
+                }
+            }
+
+            classifySignal(duration) {
+                // Tính xác suất cho dot và dash
+                const dotProb = this.gaussianProbability(duration, this.clusters.dot);
+                const dashProb = this.gaussianProbability(duration, this.clusters.dash);
+
+                // Trả về loại tín hiệu có xác suất cao hơn
+                if (Math.max(dotProb, dashProb) < this.confidenceThreshold) {
+                    return null; // Không đủ tin cậy
+                }
+                return dotProb > dashProb ? 'dot' : 'dash';
+            }
+
+            classifyGap(duration) {
+                // Tính xác suất cho mỗi loại khoảng cách
+                const probs = {
+                    symbol: this.gaussianProbability(duration, this.clusters.symbolGap),
+                    letter: this.gaussianProbability(duration, this.clusters.letterGap),
+                    word: this.gaussianProbability(duration, this.clusters.wordGap)
+                };
+
+                // Tìm loại có xác suất cao nhất
+                const maxProb = Math.max(...Object.values(probs));
+                if (maxProb < this.confidenceThreshold) {
+                    return null;
+                }
+
+                return Object.keys(probs).find(key => probs[key] === maxProb);
+            }
+
+            gaussianProbability(x, cluster) {
+                const { mean, std } = cluster;
+                return Math.exp(-Math.pow(x - mean, 2) / (2 * Math.pow(std, 2)));
+            }
+
+            kMeansCluster(data, k) {
+                if (data.length < k) return [];
+
+                // Khởi tạo centroids
+                let centroids = data.slice(0, k).map(x => ({ mean: x, points: [] }));
+                let changed = true;
+                let iterations = 0;
+                const maxIterations = 100;
+
+                while (changed && iterations < maxIterations) {
+                    changed = false;
+                    iterations++;
+
+                    // Reset points
+                    centroids.forEach(c => c.points = []);
+
+                    // Assign points to nearest centroid
+                    data.forEach(point => {
+                        let minDist = Infinity;
+                        let nearestCentroid = centroids[0];
+
+                        centroids.forEach(centroid => {
+                            const dist = Math.abs(point - centroid.mean);
+                            if (dist < minDist) {
+                                minDist = dist;
+                                nearestCentroid = centroid;
+                            }
+                        });
+
+                        nearestCentroid.points.push(point);
+                    });
+
+                    // Update centroids
+                    centroids.forEach(centroid => {
+                        if (centroid.points.length > 0) {
+                            const newMean = centroid.points.reduce((a, b) => a + b) / centroid.points.length;
+                            if (Math.abs(newMean - centroid.mean) > 0.1) {
+                                changed = true;
+                            }
+                            centroid.mean = newMean;
+                            centroid.variance = centroid.points.reduce((acc, p) => 
+                                acc + Math.pow(p - centroid.mean, 2), 0) / centroid.points.length;
+                        }
+                    });
+                }
+
+                return centroids;
+            }
+
+            // Thêm context awareness
+            predictNextGap(currentPattern) {
+                // Dựa vào mẫu hiện tại để dự đoán khoảng cách tiếp theo
+                const similarPatterns = this.patterns.words.filter(pattern => 
+                    pattern.startsWith(currentPattern));
+                
+                if (similarPatterns.length > 0) {
+                    // Tính toán khoảng cách phổ biến nhất
+                    const nextGaps = similarPatterns.map(p => p[currentPattern.length]);
+                    return this.mostCommon(nextGaps);
+                }
+                return null;
+            }
+
+            mostCommon(arr) {
+                return arr.sort((a,b) =>
+                    arr.filter(v => v === a).length - arr.filter(v => v === b).length
+                ).pop();
+            }
+        }
+
         class MorseDecoder {
             constructor() {
                 this.MORSE_TO_CHAR = {
@@ -187,6 +375,9 @@
                 this.morseTimings = new MorseTimings();
                 this.currentChar = '';
                 this.message = '';
+                this.ai = new MorseAI();
+                this.currentPattern = '';
+                this.lastGapType = null;
             }
 
             setupUI() {
@@ -233,10 +424,16 @@
                         this.morseTimings.updateTimings(dotLength);
                         
                         if (volume > threshold) {
-                            // Xử lý khoảng lặng trước khi có tín hiệu mới
                             if (!this.soundStart) {
-                                const breakType = this.morseTimings.processSilence(currentTime);
-                                this.handleBreak(breakType);
+                                // Xử lý khoảng lặng trước đó
+                                const gapDuration = currentTime - this.morseTimings.lastSignalEnd;
+                                const gapType = this.ai.classifyGap(gapDuration);
+                                
+                                if (gapType) {
+                                    this.handleGap(gapType);
+                                    this.lastGapType = gapType;
+                                }
+                                
                                 this.soundStart = currentTime;
                             }
                         } else if (this.soundStart) {
@@ -244,15 +441,24 @@
                             const duration = currentTime - this.soundStart;
                             this.morseTimings.lastSignalEnd = currentTime;
                             
-                            // Phân biệt dấu chấm và gạch ngang
-                            if (duration > this.morseTimings.DASH_LENGTH * 0.7) {
-                                this.currentChar += '-';
-                            } else {
-                                this.currentChar += '.';
+                            // Sử dụng AI để phân loại tín hiệu
+                            const signalType = this.ai.classifySignal(duration);
+                            if (signalType) {
+                                this.currentChar += signalType === 'dot' ? '.' : '-';
+                                this.currentPattern += signalType;
+                                
+                                // Học mẫu mới
+                                this.ai.learn(duration, 'signal');
                             }
                             
                             this.soundStart = null;
                             this.updateDisplay();
+                            
+                            // Dự đoán khoảng cách tiếp theo
+                            const predictedGap = this.ai.predictNextGap(this.currentPattern);
+                            if (predictedGap) {
+                                this.updateStatus(`Dự đoán khoảng cách tiếp theo: ${predictedGap}`);
+                            }
                         }
                         
                         requestAnimationFrame(analyze);
@@ -281,19 +487,19 @@
                 }
             }
 
-            handleBreak(breakType) {
-                if (!breakType) return;
-
-                switch (breakType) {
-                    case 'WORD_BREAK':
+            handleGap(gapType) {
+                switch(gapType) {
+                    case 'word':
                         this.decodeMorse();
                         this.message += ' ';
+                        this.currentPattern = '';
                         break;
-                    case 'LETTER_BREAK':
+                    case 'letter':
                         this.decodeMorse();
+                        this.currentPattern += ' ';
                         break;
-                    case 'SYMBOL_BREAK':
-                        // Tiếp tục thu thập các dấu cho ký tự hiện tại
+                    case 'symbol':
+                        // Tiếp tục thu thập tín hiệu cho ký tự hiện tại
                         break;
                 }
             }
@@ -453,4 +659,4 @@
         });
     </script>
 </body>
-</html> 
+</html>
