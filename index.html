@@ -136,6 +136,7 @@
                 this.lastSoundTime = Date.now();
                 this.soundStart = null;
                 this.setupUI();
+                this.adaptiveThreshold = new AdaptiveThreshold();
             }
 
             setupUI() {
@@ -164,7 +165,7 @@
                     const dataArray = new Uint8Array(bufferLength);
                     
                     this.isListening = true;
-                    this.updateStatus('Đang lắng nghe...');
+                    this.updateStatus('Đang lắng nghe và học...');
                     this.startButton.textContent = 'Dừng nghe';
                     
                     const analyze = () => {
@@ -174,9 +175,14 @@
                         const volume = dataArray.reduce((a, b) => a + b) / bufferLength;
                         this.updateVolumeMeter(volume);
                         
-                        const threshold = this.thresholdSlider.value;
-                        const dotLength = parseInt(this.dotLengthInput.value);
                         const currentTime = Date.now();
+                        
+                        // Thêm mẫu mới vào adaptive threshold
+                        this.adaptiveThreshold.addSample(volume, 
+                            this.soundStart ? currentTime - this.soundStart : 0);
+                        
+                        const threshold = this.adaptiveThreshold.getThreshold();
+                        const dotLength = this.adaptiveThreshold.getDotLength();
                         
                         if (volume > threshold) {
                             if (!this.soundStart) {
@@ -192,7 +198,6 @@
                             this.soundStart = null;
                             this.updateCurrentMorse();
                             
-                            // Tự động giải mã sau khoảng lặng
                             setTimeout(() => {
                                 if (!this.soundStart) {
                                     this.decodeMorse();
@@ -246,6 +251,131 @@
             updateVolumeMeter(volume) {
                 const percentage = Math.min(100, (volume / 128) * 100);
                 this.volumeBar.style.width = percentage + '%';
+            }
+        }
+
+        class AdaptiveThreshold {
+            constructor() {
+                this.samples = [];
+                this.maxSamples = 100;
+                this.learningRate = 0.1;
+                this.threshold = 30;
+                this.dotLength = 100;
+                this.soundPatterns = [];
+                this.lastAdjustment = Date.now();
+            }
+
+            addSample(volume, duration) {
+                this.samples.push({ volume, duration });
+                if (this.samples.length > this.maxSamples) {
+                    this.samples.shift();
+                }
+
+                // Lưu mẫu độ dài âm thanh
+                if (duration > 0) {
+                    this.soundPatterns.push(duration);
+                    if (this.soundPatterns.length > 20) {
+                        this.soundPatterns.shift();
+                    }
+                }
+
+                // Điều chỉnh mỗi 2 giây
+                if (Date.now() - this.lastAdjustment > 2000) {
+                    this.adjustThreshold();
+                    this.adjustDotLength();
+                    this.lastAdjustment = Date.now();
+                }
+            }
+
+            adjustThreshold() {
+                if (this.samples.length < 10) return;
+
+                // Tính toán ngưỡng dựa trên phân phối âm lượng
+                const volumes = this.samples.map(s => s.volume);
+                const mean = volumes.reduce((a, b) => a + b) / volumes.length;
+                const std = Math.sqrt(
+                    volumes.map(x => Math.pow(x - mean, 2))
+                          .reduce((a, b) => a + b) / volumes.length
+                );
+
+                // Sử dụng thuật toán Otsu để tìm ngưỡng tối ưu
+                const newThreshold = mean + std * 0.5;
+                
+                // Áp dụng smoothing
+                this.threshold = this.threshold * (1 - this.learningRate) + 
+                                newThreshold * this.learningRate;
+
+                // Cập nhật UI
+                document.getElementById('thresholdSlider').value = Math.round(this.threshold);
+                document.getElementById('thresholdValue').textContent = Math.round(this.threshold);
+            }
+
+            adjustDotLength() {
+                if (this.soundPatterns.length < 5) return;
+
+                // Sử dụng K-means clustering để phân biệt dấu chấm và gạch ngang
+                const patterns = [...this.soundPatterns].sort((a, b) => a - b);
+                const kmeans = this.kMeansClustering(patterns, 2);
+
+                // Cluster thấp hơn là độ dài của dấu chấm
+                if (kmeans.clusters[0].length > 0) {
+                    const newDotLength = Math.round(
+                        kmeans.clusters[0].reduce((a, b) => a + b) / kmeans.clusters[0].length
+                    );
+
+                    // Áp dụng smoothing
+                    this.dotLength = Math.round(
+                        this.dotLength * (1 - this.learningRate) + 
+                        newDotLength * this.learningRate
+                    );
+
+                    // Cập nhật UI
+                    document.getElementById('dotLength').value = this.dotLength;
+                }
+            }
+
+            kMeansClustering(data, k) {
+                // Thuật toán K-means đơn giản
+                let centroids = data.slice(0, k);
+                let clusters = Array(k).fill().map(() => []);
+                
+                // Lặp 5 lần là đủ cho trường hợp này
+                for (let iter = 0; iter < 5; iter++) {
+                    clusters = Array(k).fill().map(() => []);
+                    
+                    // Gán các điểm vào cluster gần nhất
+                    for (let point of data) {
+                        let minDist = Infinity;
+                        let minIndex = 0;
+                        
+                        for (let i = 0; i < centroids.length; i++) {
+                            const dist = Math.abs(point - centroids[i]);
+                            if (dist < minDist) {
+                                minDist = dist;
+                                minIndex = i;
+                            }
+                        }
+                        
+                        clusters[minIndex].push(point);
+                    }
+                    
+                    // Cập nhật centroids
+                    for (let i = 0; i < k; i++) {
+                        if (clusters[i].length > 0) {
+                            centroids[i] = clusters[i].reduce((a, b) => a + b) / clusters[i].length;
+                        }
+                    }
+                }
+                
+                return { centroids, clusters };
+            }
+
+            getThreshold() {
+                return this.threshold;
+            }
+
+            getDotLength() {
+                return this.dotLength;
             }
         }
 
