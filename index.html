@@ -1,147 +1,258 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nhận diện văn bản từ Camera</title>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.1/dist/tesseract.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f4f4f9;
-      text-align: center;
-    }
-
-    .container {
-      width: 80%;
-      margin: 20px auto;
-      padding: 20px;
-      background-color: white;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    #videoElement {
-      width: 100%;
-      max-width: 600px;
-      border: 2px solid #ccc;
-      border-radius: 8px;
-    }
-
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      margin-top: 10px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    #result {
-      margin-top: 20px;
-      font-size: 18px;
-      color: #333;
-      white-space: pre-wrap;
-      text-align: left;
-      background-color: #e0e0e0;
-      padding: 10px;
-      border-radius: 5px;
-    }
-
-    #loading {
-      display: none;
-      margin-top: 20px;
-      font-size: 20px;
-      color: #007bff;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morse Code Decoder</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status-container {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        #startButton {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #startButton:hover {
+            background-color: #1557b0;
+        }
+        #startButton:disabled {
+            background-color: #ccc;
+        }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fff;
+        }
+        #volumeMeter {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        #volumeBar {
+            height: 100%;
+            width: 0%;
+            background-color: #1a73e8;
+            transition: width 0.1s;
+        }
+        .settings {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .settings label {
+            display: block;
+            margin: 10px 0;
+        }
+        .settings input {
+            width: 100%;
+            padding: 5px;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Morse Code Decoder</h1>
+        
+        <button id="startButton">Bắt đầu nghe</button>
 
-  <div class="container">
-    <h1>Nhận diện văn bản từ Camera</h1>
-    <p>Chụp ảnh từ camera và nhận diện các dòng chứa "OTT" và "NW".</p>
-    <video id="videoElement" autoplay></video>
-    <button id="captureButton">Chụp ảnh</button>
-    <div id="loading">Đang xử lý, vui lòng đợi...</div>
-    <div id="result"></div>
-  </div>
+        <div class="status-container">
+            <div>Trạng thái: <span id="status">Chưa kết nối</span></div>
+            <div id="volumeMeter">
+                <div id="volumeBar"></div>
+            </div>
+        </div>
 
-  <script>
-    const videoElement = document.getElementById('videoElement');
-    const captureButton = document.getElementById('captureButton');
-    const resultDiv = document.getElementById('result');
-    const loadingDiv = document.getElementById('loading');
-    let currentStream;
+        <div class="settings">
+            <label>
+                Ngưỡng âm thanh:
+                <input type="range" id="thresholdSlider" min="0" max="100" value="30">
+                <span id="thresholdValue">30</span>
+            </label>
+            <label>
+                Độ dài dấu (ms):
+                <input type="number" id="dotLength" value="100" min="50" max="500">
+            </label>
+        </div>
 
-    // Bật camera
-    function startCamera() {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then((stream) => {
-          videoElement.srcObject = stream;
-          currentStream = stream;
-        })
-        .catch((err) => {
-          console.error("Lỗi khi truy cập camera: ", err);
-        });
-    }
+        <div class="result-box">
+            <h3>Tín hiệu hiện tại:</h3>
+            <div id="currentMorse"></div>
+        </div>
 
-    // Chụp ảnh từ camera
-    captureButton.addEventListener('click', () => {
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      const width = videoElement.videoWidth;
-      const height = videoElement.videoHeight;
+        <div class="result-box">
+            <h3>Văn bản đã giải mã:</h3>
+            <div id="result"></div>
+        </div>
+    </div>
 
-      canvas.width = width;
-      canvas.height = height;
-      context.drawImage(videoElement, 0, 0, width, height);
-      const imageData = canvas.toDataURL('image/png');
-      
-      // Gọi hàm nhận diện văn bản từ ảnh đã chụp
-      recognizeText(imageData);
-    });
+    <script>
+        class MorseDecoder {
+            constructor() {
+                this.MORSE_TO_CHAR = {
+                    '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E',
+                    '..-.': 'F', '--.': 'G', '....': 'H', '..': 'I', '.---': 'J',
+                    '-.-': 'K', '.-..': 'L', '--': 'M', '-.': 'N', '---': 'O',
+                    '.--.': 'P', '--.-': 'Q', '.-.': 'R', '...': 'S', '-': 'T',
+                    '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X', '-.--': 'Y',
+                    '--..': 'Z', ' ': ' '
+                };
+                this.currentMorse = '';
+                this.isListening = false;
+                this.lastSoundTime = Date.now();
+                this.soundStart = null;
+                this.setupUI();
+            }
 
-    // Hàm nhận diện văn bản
-    function recognizeText(imageData) {
-      loadingDiv.style.display = 'block'; // Hiển thị thông báo đang xử lý
-      resultDiv.innerText = ''; // Xóa kết quả trước đó
+            setupUI() {
+                this.startButton = document.getElementById('startButton');
+                this.thresholdSlider = document.getElementById('thresholdSlider');
+                this.dotLengthInput = document.getElementById('dotLength');
+                this.volumeBar = document.getElementById('volumeBar');
 
-      Tesseract.recognize(
-        imageData,
-        'vie', // Ngôn ngữ tiếng Việt
-        {
-          logger: (m) => console.log(m),
+                this.startButton.addEventListener('click', () => this.toggleListening());
+                this.thresholdSlider.addEventListener('input', (e) => {
+                    document.getElementById('thresholdValue').textContent = e.target.value;
+                });
+            }
+
+            async start() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const audioContext = new AudioContext();
+                    const source = audioContext.createMediaStreamSource(stream);
+                    const analyzer = audioContext.createAnalyser();
+                    
+                    source.connect(analyzer);
+                    analyzer.fftSize = 2048;
+                    
+                    const bufferLength = analyzer.frequencyBinCount;
+                    const dataArray = new Uint8Array(bufferLength);
+                    
+                    this.isListening = true;
+                    this.updateStatus('Đang lắng nghe...');
+                    this.startButton.textContent = 'Dừng nghe';
+                    
+                    const analyze = () => {
+                        if (!this.isListening) return;
+                        
+                        analyzer.getByteFrequencyData(dataArray);
+                        const volume = dataArray.reduce((a, b) => a + b) / bufferLength;
+                        this.updateVolumeMeter(volume);
+                        
+                        const threshold = this.thresholdSlider.value;
+                        const dotLength = parseInt(this.dotLengthInput.value);
+                        const currentTime = Date.now();
+                        
+                        if (volume > threshold) {
+                            if (!this.soundStart) {
+                                this.soundStart = currentTime;
+                            }
+                        } else if (this.soundStart) {
+                            const duration = currentTime - this.soundStart;
+                            if (duration > dotLength * 1.5) {
+                                this.currentMorse += '-';
+                            } else {
+                                this.currentMorse += '.';
+                            }
+                            this.soundStart = null;
+                            this.updateCurrentMorse();
+                            
+                            // Tự động giải mã sau khoảng lặng
+                            setTimeout(() => {
+                                if (!this.soundStart) {
+                                    this.decodeMorse();
+                                }
+                            }, dotLength * 3);
+                        }
+                        
+                        requestAnimationFrame(analyze);
+                    };
+                    
+                    analyze();
+                    
+                } catch (error) {
+                    this.updateStatus('Lỗi: ' + error.message);
+                    this.startButton.textContent = 'Bắt đầu nghe';
+                    this.isListening = false;
+                }
+            }
+
+            stop() {
+                this.isListening = false;
+                this.updateStatus('Đã dừng');
+                this.startButton.textContent = 'Bắt đầu nghe';
+            }
+
+            toggleListening() {
+                if (!this.isListening) {
+                    this.start();
+                } else {
+                    this.stop();
+                }
+            }
+
+            decodeMorse() {
+                if (!this.currentMorse) return;
+                
+                const char = this.MORSE_TO_CHAR[this.currentMorse] || '?';
+                document.getElementById('result').textContent += char;
+                this.currentMorse = '';
+                this.updateCurrentMorse();
+            }
+
+            updateCurrentMorse() {
+                document.getElementById('currentMorse').textContent = this.currentMorse;
+            }
+
+            updateStatus(message) {
+                document.getElementById('status').textContent = message;
+            }
+
+            updateVolumeMeter(volume) {
+                const percentage = Math.min(100, (volume / 128) * 100);
+                this.volumeBar.style.width = percentage + '%';
+            }
         }
-      ).then(({ data: { text } }) => {
-        loadingDiv.style.display = 'none'; // Ẩn thông báo đang xử lý
 
-        // Lọc các dòng chứa "OTT" và "NW"
-        const filteredText = filterLines(text);
-        resultDiv.innerText = filteredText;
-      }).catch((error) => {
-        loadingDiv.style.display = 'none';
-        resultDiv.innerText = 'Có lỗi xảy ra: ' + error.message;
-      });
-    }
-
-    // Hàm lọc các dòng chứa "OTT" và "NW"
-    function filterLines(text) {
-      const lines = text.split('\n');
-      const filteredLines = lines.filter(line => line.includes('OTT') || line.includes('NW'));
-      return filteredLines.join('\n');
-    }
-
-    // Khởi động camera khi trang được tải
-    startCamera();
-  </script>
-
+        // Khởi tạo khi trang web được load
+        document.addEventListener('DOMContentLoaded', () => {
+            new MorseDecoder();
+        });
+    </script>
 </body>
-</html>
+</html> 
